@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0056A3;
+  --primary-dark: #003d7a;
+  --secondary: #F5A623;
+  --secondary-light: #f8c86a;
+  --bg-light: #f4f7fc;
+  --text-dark: #1a2a3a;
+  --text-muted: #6b7a8a;
+  --border-color: #e2e8f0;
+  --shadow: 0 4px 24px rgba(0, 86, 163, 0.08);
+  --radius: 12px;
+}
+
+@layer components {
+  .stat-card {
+    @apply bg-white rounded-xl p-5 shadow-sm border border-[#e2e8f0] transition-all hover:-translate-y-0.5 hover:shadow-md;
+  }
+  
+  .content-card {
+    @apply bg-white rounded-xl shadow-sm border border-[#e2e8f0] overflow-hidden;
+  }
+  
+  .btn-primary {
+    @apply bg-[#0056A3] text-white px-5 py-2.5 rounded-xl font-semibold transition-all hover:bg-[#003d7a] hover:-translate-y-0.5 hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-[#F5A623] text-[#0056A3] px-5 py-2.5 rounded-xl font-semibold transition-all hover:bg-[#f8c86a] hover:-translate-y-0.5;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-[#e2e8f0] text-[#1a2a3a] px-4 py-2 rounded-xl font-medium transition-all hover:border-[#0056A3] hover:text-[#0056A3] hover:bg-[#0056A3]/5;
+  }
+  
+  .badge-approved {
+    @apply bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-pending {
+    @apply bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-rejected {
+    @apply bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-review {
+    @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-active {
+    @apply bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-inactive {
+    @apply bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Chart containers */
+.chart-container {
+  position: relative;
+  height: 260px;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeUp 0.5s ease-out;
+}

@@ -1,10 +1,44 @@
 import { NextResponse } from 'next/server';
 
-// Hardcoded users for testing
+// Full employee database with roles
 const USERS = [
-  { email: 'admin@nacca.gov.gh', password: 'Admin@123', name: 'System Admin', role: 'SUPER_ADMIN' },
-  { email: 'hr@nacca.gov.gh', password: 'Hr@123', name: 'HR Admin', role: 'HR_ADMIN' },
-  { email: 'dg@nacca.gov.gh', password: 'Dg@123', name: 'Director General', role: 'DIRECTOR_GENERAL' },
+  // Super Admin - Full Access
+  { 
+    email: 'admin@nacca.gov.gh', 
+    password: 'Admin@123', 
+    name: 'System Administrator', 
+    role: 'SUPER_ADMIN',
+    staffId: 'NAC-IT-0001',
+    department: 'ICT'
+  },
+  
+  // Directors - Can see all but limited admin actions
+  { 
+    email: 'director@nacca.gov.gh', 
+    password: 'Director@123', 
+    name: 'Reginald George Quartey', 
+    role: 'DIRECTOR',
+    staffId: 'NAC-CD-0001',
+    department: 'Curriculum'
+  },
+  { 
+    email: 'hr@nacca.gov.gh', 
+    password: 'Hr@123', 
+    name: 'Elijah Intsiful', 
+    role: 'DIRECTOR',
+    staffId: 'NAC-HR-0001',
+    department: 'Human Resource'
+  },
+  
+  // Staff - Limited access
+  { 
+    email: 'staff@nacca.gov.gh', 
+    password: 'Staff@123', 
+    name: 'Genevieve Mensah', 
+    role: 'STAFF',
+    staffId: 'NAC-CD-0002',
+    department: 'Curriculum'
+  },
 ];
 
 export async function POST(request) {
@@ -12,9 +46,6 @@ export async function POST(request) {
     const body = await request.json();
     const { email, password } = body;
 
-    console.log('Login attempt:', email); // For debugging
-
-    // Find user
     const user = USERS.find(u => u.email === email && u.password === password);
 
     if (!user) {
@@ -24,24 +55,26 @@ export async function POST(request) {
       );
     }
 
-    // Create response with user data (no JWT for now)
     const response = NextResponse.json({
       success: true,
       user: {
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        staffId: user.staffId,
+        department: user.department
       }
     });
 
-    // Set a simple cookie
     response.cookies.set('auth_user', JSON.stringify({
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+      staffId: user.staffId,
+      department: user.department
     }), {
       httpOnly: true,
-      secure: false, // Set to true in production
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24,
       path: '/',
@@ -49,7 +82,6 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
-    console.error('Login error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }

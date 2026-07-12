@@ -1,12 +1,33 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 export default function ProfilePage() {
-  const handleEditProfile = () => {
-    alert('✏️ Edit Profile form coming soon!');
-  };
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          setUser(data.user);
+        }
+      });
+  }, []);
 
   const handleUpdateProfile = () => {
     alert('✅ Profile updated successfully!');
+  };
+
+  if (!user) return <div>Loading...</div>;
+
+  const getRoleColor = (role) => {
+    const colors = {
+      'SUPER_ADMIN': 'text-purple-600',
+      'DIRECTOR': 'text-blue-600',
+      'STAFF': 'text-green-600',
+    };
+    return colors[role] || 'text-gray-600';
   };
 
   return (
@@ -20,18 +41,24 @@ export default function ProfilePage() {
         <div className="content-card">
           <div className="p-5 text-center">
             <div className="w-24 h-24 rounded-full bg-[#F5A623] mx-auto flex items-center justify-center text-3xl font-bold text-[#0056A3]">
-              SA
+              {user.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'SA'}
             </div>
-            <h5 className="font-bold text-lg mt-3">System Admin</h5>
-            <p className="text-[#6b7a8a] text-sm">SUPER_ADMIN</p>
-            <p className="text-[#6b7a8a] text-sm mt-1">admin@nacca.gov.gh</p>
+            <h5 className="font-bold text-lg mt-3">{user.name}</h5>
+            <p className={`text-sm font-semibold ${getRoleColor(user.role)}`}>
+              <i className="fas fa-shield-alt mr-1"></i>
+              {user.role}
+            </p>
+            <p className="text-[#6b7a8a] text-sm mt-1">{user.email}</p>
             <hr className="my-3" />
             <div className="text-left text-sm space-y-2">
-              <p><strong>Staff ID:</strong> NACCA0001</p>
-              <p><strong>Department:</strong> HR & Administration</p>
-              <p><strong>Joined:</strong> January 2020</p>
+              <p><strong>Staff ID:</strong> {user.staffId || 'N/A'}</p>
+              <p><strong>Department:</strong> {user.department || 'N/A'}</p>
+              <p><strong>Access Level:</strong> 
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${getRoleColor(user.role)} bg-${user.role === 'SUPER_ADMIN' ? 'purple' : user.role === 'DIRECTOR' ? 'blue' : 'green'}-100`}>
+                  {user.role}
+                </span>
+              </p>
             </div>
-            <button onClick={handleEditProfile} className="btn-primary w-full mt-3">Edit Profile</button>
           </div>
         </div>
 
@@ -42,23 +69,33 @@ export default function ProfilePage() {
           <div className="p-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="font-semibold text-sm">First Name</label>
-                <input type="text" className="w-full p-2 border rounded-lg mt-1" defaultValue="System" />
-              </div>
-              <div>
-                <label className="font-semibold text-sm">Last Name</label>
-                <input type="text" className="w-full p-2 border rounded-lg mt-1" defaultValue="Admin" />
+                <label className="font-semibold text-sm">Full Name</label>
+                <input type="text" className="w-full p-2 border rounded-lg mt-1" defaultValue={user.name} />
               </div>
               <div>
                 <label className="font-semibold text-sm">Email</label>
-                <input type="email" className="w-full p-2 border rounded-lg mt-1" defaultValue="admin@nacca.gov.gh" />
+                <input type="email" className="w-full p-2 border rounded-lg mt-1" defaultValue={user.email} />
+              </div>
+              <div>
+                <label className="font-semibold text-sm">Staff ID</label>
+                <input type="text" className="w-full p-2 border rounded-lg mt-1 bg-gray-50" defaultValue={user.staffId} readOnly />
+              </div>
+              <div>
+                <label className="font-semibold text-sm">Department</label>
+                <input type="text" className="w-full p-2 border rounded-lg mt-1 bg-gray-50" defaultValue={user.department} readOnly />
               </div>
               <div>
                 <label className="font-semibold text-sm">Phone</label>
                 <input type="tel" className="w-full p-2 border rounded-lg mt-1" defaultValue="+233 20 100 1000" />
               </div>
+              <div>
+                <label className="font-semibold text-sm">Role</label>
+                <input type="text" className="w-full p-2 border rounded-lg mt-1 bg-gray-50 font-semibold" defaultValue={user.role} readOnly />
+              </div>
             </div>
-            <button onClick={handleUpdateProfile} className="btn-primary mt-4">Update Profile</button>
+            <button onClick={handleUpdateProfile} className="btn-primary mt-4">
+              <i className="fas fa-save mr-2"></i>Update Profile
+            </button>
           </div>
         </div>
       </div>

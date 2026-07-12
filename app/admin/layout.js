@@ -9,9 +9,9 @@ export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication
     fetch('/api/auth/me')
       .then(res => res.json())
       .then(data => {
@@ -21,24 +21,31 @@ export default function AdminLayout({ children }) {
           setUser(data.user);
         }
       })
-      .catch(() => router.push('/'));
-  }, []);
+      .catch(() => router.push('/'))
+      .finally(() => setLoading(false));
+  }, [router]);
 
-  const navItems = [
-    { icon: 'fa-th-large', label: 'Dashboard', path: '/admin' },
-    { icon: 'fa-users', label: 'Employees', path: '/admin/employees' },
-    { icon: 'fa-calendar-check', label: 'Leave Management', path: '/admin/leave' },
-    { icon: 'fa-clock', label: 'Attendance', path: '/admin/attendance' },
-    { icon: 'fa-chart-line', label: 'Performance', path: '/admin/performance' },
-    { icon: 'fa-graduation-cap', label: 'Training', path: '/admin/training' },
-    { icon: 'fa-briefcase', label: 'Recruitment', path: '/admin/recruitment' },
-    { icon: 'fa-laptop', label: 'Assets', path: '/admin/assets' },
-    { icon: 'fa-file-alt', label: 'Documents', path: '/admin/documents' },
-    { icon: 'fa-wallet', label: 'Payroll', path: '/admin/payroll' },
-    { icon: 'fa-chart-bar', label: 'Analytics', path: '/admin/analytics' },
-    { icon: 'fa-file-pdf', label: 'Reports', path: '/admin/reports' },
-    { icon: 'fa-cog', label: 'Settings', path: '/admin/settings' },
-  ];
+  // Define navigation items with role-based visibility
+  const getNavItems = (role) => {
+    const allItems = [
+      { icon: 'fa-th-large', label: 'Dashboard', path: '/admin', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+      { icon: 'fa-users', label: 'Employees', path: '/admin/employees', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+      { icon: 'fa-calendar-check', label: 'Leave Management', path: '/admin/leave', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+      { icon: 'fa-clock', label: 'Attendance', path: '/admin/attendance', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+      { icon: 'fa-chart-line', label: 'Performance', path: '/admin/performance', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+      { icon: 'fa-graduation-cap', label: 'Training', path: '/admin/training', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+      { icon: 'fa-briefcase', label: 'Recruitment', path: '/admin/recruitment', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+      { icon: 'fa-laptop', label: 'Assets', path: '/admin/assets', roles: ['SUPER_ADMIN'] },
+      { icon: 'fa-file-alt', label: 'Documents', path: '/admin/documents', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+      { icon: 'fa-wallet', label: 'Payroll', path: '/admin/payroll', roles: ['SUPER_ADMIN'] },
+      { icon: 'fa-chart-bar', label: 'Analytics', path: '/admin/analytics', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+      { icon: 'fa-file-pdf', label: 'Reports', path: '/admin/reports', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+      { icon: 'fa-cog', label: 'Settings', path: '/admin/settings', roles: ['SUPER_ADMIN'] },
+    ];
+
+    // Filter items based on user role
+    return allItems.filter(item => item.roles.includes(role));
+  };
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -47,16 +54,36 @@ export default function AdminLayout({ children }) {
 
   const isActive = (path) => pathname === path;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f4f7fc]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#e2e8f0] border-t-[#0056A3] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-[#6b7a8a]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const navItems = getNavItems(user?.role || 'STAFF');
+
+  // Role badge color
+  const getRoleBadgeColor = (role) => {
+    const colors = {
+      'SUPER_ADMIN': 'bg-purple-600 text-white',
+      'DIRECTOR': 'bg-blue-600 text-white',
+      'STAFF': 'bg-green-600 text-white',
+    };
+    return colors[role] || 'bg-gray-600 text-white';
+  };
+
   return (
     <div className="flex min-h-screen bg-[#f4f7fc]">
-      {/* Sidebar Overlay (mobile) */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside className={`fixed top-0 left-0 bottom-0 w-[260px] bg-[#0056A3] text-white z-50 transition-transform duration-300 flex flex-col overflow-y-auto ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${!sidebarOpen ? 'lg:-translate-x-full' : ''}`}>
-        {/* Brand */}
         <div className="p-5 border-b border-white/10 flex items-center gap-3">
           <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center text-xl">
             <i className="fas fa-landmark"></i>
@@ -67,18 +94,23 @@ export default function AdminLayout({ children }) {
           </div>
         </div>
 
-        {/* User */}
-        <div className="p-4 border-b border-white/10 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#F5A623] flex items-center justify-center font-bold text-[#0056A3] text-sm">
-            {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'SA'}
+        <div className="p-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#F5A623] flex items-center justify-center font-bold text-[#0056A3] text-sm">
+              {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'SA'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm truncate">{user?.name || 'System Admin'}</div>
+              <div className="text-[10px] opacity-60 uppercase tracking-wider">{user?.staffId || 'N/A'}</div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-sm truncate">{user?.name || 'System Admin'}</div>
-            <div className="text-[10px] opacity-60 uppercase tracking-wider">{user?.role || 'Super Administrator'}</div>
+          <div className="mt-2">
+            <span className={`text-[10px] px-3 py-1 rounded-full ${getRoleBadgeColor(user?.role)}`}>
+              {user?.role || 'STAFF'}
+            </span>
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 p-3 overflow-y-auto">
           <div className="text-[10px] uppercase tracking-wider opacity-40 px-3 py-2 font-semibold">Main</div>
           {navItems.map((item) => (
@@ -103,9 +135,7 @@ export default function AdminLayout({ children }) {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'}`}>
-        {/* Top Header */}
         <header className="bg-white sticky top-0 z-30 border-b border-[#e2e8f0] px-6 py-3 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
             <button
@@ -124,7 +154,9 @@ export default function AdminLayout({ children }) {
               <h4 className="font-bold text-lg m-0">
                 {navItems.find(i => i.path === pathname)?.label || 'Dashboard'}
               </h4>
-              <p className="text-sm text-[#6b7a8a] m-0">NaCCA HRMIS</p>
+              <p className="text-sm text-[#6b7a8a] m-0">
+                {user?.role === 'SUPER_ADMIN' ? 'Full Access' : user?.role === 'DIRECTOR' ? 'Director Access' : 'Staff Access'}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -144,13 +176,12 @@ export default function AdminLayout({ children }) {
               <div className="w-8 h-8 rounded-full bg-[#F5A623] flex items-center justify-center font-bold text-[#0056A3] text-xs">
                 {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'SA'}
               </div>
-              <span className="text-sm font-semibold hidden sm:inline">{user?.name || 'System Admin'}</span>
+              <span className="text-sm font-semibold hidden sm:inline truncate max-w-[100px]">{user?.name || 'System Admin'}</span>
               <i className="fas fa-chevron-down text-[10px] opacity-50 hidden sm:inline"></i>
             </button>
           </div>
         </header>
 
-        {/* Page Content */}
         <div className="p-5 md:p-8">
           {children}
         </div>

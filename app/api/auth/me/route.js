@@ -1,26 +1,32 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
-export async function GET() {
-  const token = cookies().get('auth_token');
-
-  if (!token) {
-    return NextResponse.json({ authenticated: false }, { status: 401 });
-  }
-
+export async function GET(request) {
   try {
-    // Decode the base64 token
-    const userData = JSON.parse(Buffer.from(token.value, 'base64').toString());
+    // Get the cookie from the request
+    const cookieHeader = request.headers.get('cookie');
+    if (!cookieHeader) {
+      return NextResponse.json({ authenticated: false }, { status: 401 });
+    }
+
+    // Parse cookies
+    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+
+    const authData = cookies['auth_user'];
+    if (!authData) {
+      return NextResponse.json({ authenticated: false }, { status: 401 });
+    }
+
+    const user = JSON.parse(decodeURIComponent(authData));
     return NextResponse.json({
       authenticated: true,
-      user: { 
-        email: userData.email, 
-        name: userData.name, 
-        role: userData.role 
-      },
+      user: user
     });
   } catch (error) {
-    cookies().delete('auth_token');
+    console.error('Auth check error:', error);
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 }

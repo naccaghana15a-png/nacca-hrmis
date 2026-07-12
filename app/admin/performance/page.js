@@ -1,4 +1,10 @@
+'use client';
+
 export default function PerformancePage() {
+  const handleNewReview = () => {
+    alert('📝 New Performance Review form coming soon!');
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -6,7 +12,7 @@ export default function PerformancePage() {
           <h5 className="font-bold text-xl m-0">Performance Management</h5>
           <p className="text-[#6b7a8a] text-sm m-0">Review and manage staff performance</p>
         </div>
-        <button className="btn-primary">
+        <button onClick={handleNewReview} className="btn-primary">
           <i className="fas fa-plus mr-2"></i>New Review
         </button>
       </div>

@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function SettingsPage() {
   const handleSaveSettings = () => {
     alert('✅ Settings saved successfully!');
@@ -14,30 +16,36 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Security Settings */}
         <div className="content-card">
           <div className="px-5 py-3 border-b border-[#e2e8f0]">
-            <h5 className="font-semibold">Security Settings</h5>
+            <h5 className="font-semibold flex items-center gap-2">
+              <i className="fas fa-shield-alt text-[#0056A3]"></i> Security
+            </h5>
           </div>
-          <div className="p-4 space-y-3">
-            <div>
-              <label className="font-semibold text-sm">Session Timeout (minutes)</label>
-              <input type="number" className="w-full p-2 border rounded-lg mt-1" defaultValue="30" />
-            </div>
-            <div>
-              <label className="font-semibold text-sm">Max Login Attempts</label>
-              <input type="number" className="w-full p-2 border rounded-lg mt-1" defaultValue="5" />
-            </div>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" defaultChecked /> <span>Force SSL/HTTPS</span>
-            </div>
-            <button onClick={handleSaveSettings} className="btn-primary w-full">Save Settings</button>
+          <div className="p-4 space-y-2">
+            <Link href="/admin/settings/password" className="quick-action w-full text-left">
+              <i className="fas fa-key w-5"></i> Change Password
+              <i className="fas fa-chevron-right ml-auto text-xs opacity-30"></i>
+            </Link>
+            <button className="quick-action w-full text-left">
+              <i className="fas fa-user-lock w-5"></i> Two-Factor Authentication
+              <i className="fas fa-chevron-right ml-auto text-xs opacity-30"></i>
+            </button>
+            <button className="quick-action w-full text-left">
+              <i className="fas fa-clock w-5"></i> Session Management
+              <i className="fas fa-chevron-right ml-auto text-xs opacity-30"></i>
+            </button>
           </div>
         </div>
 
+        {/* Email Settings */}
         <div className="content-card">
           <div className="px-5 py-3 border-b border-[#e2e8f0]">
-            <h5 className="font-semibold">Email Configuration</h5>
+            <h5 className="font-semibold flex items-center gap-2">
+              <i className="fas fa-envelope text-[#0056A3]"></i> Email
+            </h5>
           </div>
           <div className="p-4 space-y-3">
             <div>
@@ -49,6 +57,29 @@ export default function SettingsPage() {
               <input type="text" className="w-full p-2 border rounded-lg mt-1" defaultValue="587" />
             </div>
             <button onClick={handleSaveSettings} className="btn-primary w-full">Save Settings</button>
+          </div>
+        </div>
+
+        {/* System Settings */}
+        <div className="content-card">
+          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+            <h5 className="font-semibold flex items-center gap-2">
+              <i className="fas fa-database text-[#0056A3]"></i> System
+            </h5>
+          </div>
+          <div className="p-4 space-y-2">
+            <button className="quick-action w-full text-left">
+              <i className="fas fa-database w-5"></i> Backup Database
+              <i className="fas fa-chevron-right ml-auto text-xs opacity-30"></i>
+            </button>
+            <button className="quick-action w-full text-left">
+              <i className="fas fa-heartbeat w-5"></i> Health Check
+              <i className="fas fa-chevron-right ml-auto text-xs opacity-30"></i>
+            </button>
+            <button className="quick-action w-full text-left">
+              <i className="fas fa-trash w-5"></i> Clear Cache
+              <i className="fas fa-chevron-right ml-auto text-xs opacity-30"></i>
+            </button>
           </div>
         </div>
       </div>

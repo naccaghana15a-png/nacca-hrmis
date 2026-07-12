@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('staff@nacca.gov.gh');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,6 @@ export default function LoginPage() {
 
       if (res.ok) {
         if (data.requiresPasswordChange) {
-          // Show password change dialog
           setUserEmail(email);
           setUserName(data.user.name);
           setShowPasswordChange(true);
@@ -88,7 +87,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           action: 'change_password',
           email: userEmail,
-          password: password, // current/temporary password
+          password: password,
           newPassword: newPassword,
           confirmPassword: confirmPassword
         }),
@@ -176,7 +175,6 @@ export default function LoginPage() {
           <p className="text-[#6b7a8a] text-sm">Human Resource Management Information System</p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded-xl text-sm flex items-center gap-2 mb-4 border border-red-200">
             <i className="fas fa-exclamation-circle"></i>
@@ -184,7 +182,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Forgot Password Form */}
         {showForgotPassword ? (
           <form onSubmit={handleForgotPassword}>
             <div className="mb-4">
@@ -228,7 +225,6 @@ export default function LoginPage() {
             </button>
           </form>
         ) : showPasswordChange ? (
-          // Password Change Form (First Login)
           <form onSubmit={handlePasswordChange}>
             <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
               <h3 className="font-semibold text-yellow-800 flex items-center gap-2">
@@ -276,7 +272,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Password Strength Indicator */}
             {newPassword.length > 0 && (
               <div className="mb-4 p-3 bg-gray-50 rounded-xl">
                 <p className="text-sm font-semibold mb-2">Password Requirements:</p>
@@ -325,7 +320,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Password Errors */}
             {passwordErrors.length > 0 && (
               <div className="mb-4 p-3 bg-red-50 rounded-xl border border-red-200">
                 {passwordErrors.map((err, i) => (
@@ -353,7 +347,6 @@ export default function LoginPage() {
             </button>
           </form>
         ) : (
-          // Regular Login Form
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block font-semibold text-sm mb-1.5">Email Address</label>
@@ -423,18 +416,12 @@ export default function LoginPage() {
         <hr className="my-6" />
 
         <div className="text-center text-[#6b7a8a] text-xs">
-          <i className="fas fa-shield-alt mr-1"></i> Secure System &bull;
-          <i className="fas fa-clock ml-2 mr-1"></i> Session Timeout: 30 Minutes
+          <i className="fas fa-shield-alt mr-1"></i> Secure System
+          <span className="mx-2">•</span>
+          <i className="fas fa-clock mr-1"></i> Session Timeout: 30 Minutes
         </div>
 
-        <div className="mt-4 text-center text-xs border-t border-[#e2e8f0] pt-4">
-          <p className="font-mono text-[10px] text-[#94a3b8]">
-            First time login requires password change
-          </p>
-          <p className="font-mono text-[10px] text-[#94a3b8] mt-1">
-            Demo: staff@nacca.gov.gh / Temp@2026
-          </p>
-        </div>
+        {/* ===== REMOVED: Demo credentials section ===== */}
       </div>
     </div>
   );

@@ -25,7 +25,6 @@ export default function AdminLayout({ children }) {
       .finally(() => setLoading(false));
   }, [router]);
 
-  // Define navigation items with role-based visibility
   const getNavItems = (role) => {
     const allItems = [
       { icon: 'fa-th-large', label: 'Dashboard', path: '/admin', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
@@ -43,7 +42,6 @@ export default function AdminLayout({ children }) {
       { icon: 'fa-cog', label: 'Settings', path: '/admin/settings', roles: ['SUPER_ADMIN'] },
     ];
 
-    // Filter items based on user role
     return allItems.filter(item => item.roles.includes(role));
   };
 
@@ -67,7 +65,6 @@ export default function AdminLayout({ children }) {
 
   const navItems = getNavItems(user?.role || 'STAFF');
 
-  // Role badge color
   const getRoleBadgeColor = (role) => {
     const colors = {
       'SUPER_ADMIN': 'bg-purple-600 text-white',
@@ -79,11 +76,15 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="flex min-h-screen bg-[#f4f7fc]">
+      {/* Sidebar Overlay (mobile) */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
+      {/* ===== SIDEBAR ===== */}
       <aside className={`fixed top-0 left-0 bottom-0 w-[260px] bg-[#0056A3] text-white z-50 transition-transform duration-300 flex flex-col overflow-y-auto ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${!sidebarOpen ? 'lg:-translate-x-full' : ''}`}>
+        
+        {/* Brand */}
         <div className="p-5 border-b border-white/10 flex items-center gap-3">
           <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center text-xl">
             <i className="fas fa-landmark"></i>
@@ -94,6 +95,7 @@ export default function AdminLayout({ children }) {
           </div>
         </div>
 
+        {/* User Info */}
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#F5A623] flex items-center justify-center font-bold text-[#0056A3] text-sm">
@@ -111,7 +113,9 @@ export default function AdminLayout({ children }) {
           </div>
         </div>
 
+        {/* Navigation */}
         <nav className="flex-1 p-3 overflow-y-auto">
+          {/* Main Section */}
           <div className="text-[10px] uppercase tracking-wider opacity-40 px-3 py-2 font-semibold">Main</div>
           {navItems.map((item) => (
             <a
@@ -124,6 +128,17 @@ export default function AdminLayout({ children }) {
             </a>
           ))}
 
+          {/* Account Section */}
+          <div className="text-[10px] uppercase tracking-wider opacity-40 px-3 py-2 font-semibold mt-4">Account</div>
+          <a
+            href="/admin/settings/password"
+            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer text-sm font-medium ${isActive('/admin/settings/password') ? 'bg-[#F5A623] text-[#0056A3] hover:bg-[#F5A623] hover:text-[#0056A3]' : ''}`}
+          >
+            <i className="fas fa-key w-5 text-center text-base"></i>
+            <span>Change Password</span>
+          </a>
+
+          {/* System Section */}
           <div className="text-[10px] uppercase tracking-wider opacity-40 px-3 py-2 font-semibold mt-4">System</div>
           <button
             onClick={handleLogout}
@@ -135,7 +150,9 @@ export default function AdminLayout({ children }) {
         </nav>
       </aside>
 
+      {/* ===== MAIN CONTENT ===== */}
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'}`}>
+        {/* Top Header */}
         <header className="bg-white sticky top-0 z-30 border-b border-[#e2e8f0] px-6 py-3 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
             <button
@@ -182,6 +199,7 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
+        {/* Page Content */}
         <div className="p-5 md:p-8">
           {children}
         </div>

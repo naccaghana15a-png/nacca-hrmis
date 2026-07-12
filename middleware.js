@@ -1,23 +1,22 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export function middleware(request) {
+  // Only protect /admin routes
   const { pathname } = request.nextUrl;
   
-  // Public paths (no auth required)
-  const publicPaths = ['/', '/api/auth/login', '/api/auth/logout'];
-  
-  // Check if path is public
-  if (publicPaths.includes(pathname)) {
+  // Allow public access to login page and API
+  if (pathname === '/' || pathname.startsWith('/api/auth')) {
     return NextResponse.next();
   }
 
-  // Check if user is authenticated
-  const token = cookies().get('auth_token');
-  
-  if (!token && !pathname.startsWith('/api')) {
-    // Redirect to login for protected pages
-    return NextResponse.redirect(new URL('/', request.url));
+  // Check if trying to access admin routes
+  if (pathname.startsWith('/admin')) {
+    const token = request.cookies.get('auth_user');
+    
+    if (!token) {
+      // Redirect to login
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
   return NextResponse.next();

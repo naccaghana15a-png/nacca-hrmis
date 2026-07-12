@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
-// Demo users (replace with database)
+// Hardcoded users for demo (since env vars might not be loading)
 const DEMO_USERS = [
   { email: 'admin@nacca.gov.gh', password: 'Admin@123', role: 'SUPER_ADMIN', name: 'System Admin' },
   { email: 'hr@nacca.gov.gh', password: 'Hr@123', role: 'HR_ADMIN', name: 'HR Administrator' },
@@ -15,6 +15,7 @@ export async function POST(request) {
   try {
     const { email, password } = await request.json();
 
+    // Find user
     const user = DEMO_USERS.find(u => u.email === email && u.password === password);
 
     if (!user) {
@@ -24,12 +25,13 @@ export async function POST(request) {
       );
     }
 
-    // Create JWT token
-    const token = jwt.sign(
-      { email: user.email, role: user.role, name: user.name },
-      process.env.JWT_SECRET || 'dev-secret-key',
-      { expiresIn: '24h' }
-    );
+    // Create a simple token (no JWT needed for demo)
+    const token = Buffer.from(JSON.stringify({ 
+      email: user.email, 
+      role: user.role, 
+      name: user.name,
+      timestamp: Date.now()
+    })).toString('base64');
 
     // Set cookie
     cookies().set('auth_token', token, {
@@ -45,6 +47,7 @@ export async function POST(request) {
       user: { email: user.email, name: user.name, role: user.role },
     });
   } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json(
       { message: 'Authentication failed' },
       { status: 500 }

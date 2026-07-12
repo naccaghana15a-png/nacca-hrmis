@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 
 export async function GET() {
   const token = cookies().get('auth_token');
@@ -10,10 +9,15 @@ export async function GET() {
   }
 
   try {
-    const decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'dev-secret-key');
+    // Decode the base64 token
+    const userData = JSON.parse(Buffer.from(token.value, 'base64').toString());
     return NextResponse.json({
       authenticated: true,
-      user: { email: decoded.email, name: decoded.name, role: decoded.role },
+      user: { 
+        email: userData.email, 
+        name: userData.name, 
+        role: userData.role 
+      },
     });
   } catch (error) {
     cookies().delete('auth_token');

@@ -10,13 +10,6 @@ export default function EmployeesPage() {
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importPreview, setImportPreview] = useState([]);
-  const [importLoading, setImportLoading] = useState(false);
-  const [importResults, setImportResults] = useState(null);
-  
 
   // Full employee data
   const [employees, setEmployees] = useState([
@@ -29,18 +22,6 @@ export default function EmployeesPage() {
     { id: 7, staffId: 'NAC-IR-0001', name: 'Joana Vanderpuje', position: 'Ag. Director, Instructional Resources', department: 'Instructional Resources', email: 'joana.vanderpuje@nacca.gov.gh', status: 'Active', joinDate: '2020-09-05' },
     { id: 8, staffId: 'NAC-HR-0001', name: 'Elijah Intsiful', position: 'Ag. Director, Human Resources & Admin', department: 'Human Resource', email: 'elijah.intsiful@nacca.gov.gh', status: 'Active', joinDate: '2018-02-14' },
     { id: 9, staffId: 'NAC-CA-0001', name: 'Rebecca Abu Gariba', position: 'Ag. Director, Corporate Affairs', department: 'Corporate Affairs', email: 'rebecca.gariba@nacca.gov.gh', status: 'Active', joinDate: '2020-07-22' },
-    // Staff
-    { id: 10, staffId: 'NAC-AS-0002', name: 'Joachim Kwame Seyram Honu', position: 'Principal Officer', department: 'Assessment', email: 'joachim.honu@nacca.gov.gh', status: 'Active', joinDate: '2021-01-15' },
-    { id: 11, staffId: 'NAC-AS-0003', name: 'Richard Teye', position: 'Principal Officer', department: 'Assessment', email: 'richard.teye@nacca.gov.gh', status: 'Active', joinDate: '2021-03-20' },
-    { id: 12, staffId: 'NAC-CD-0002', name: 'Genevieve Mensah', position: 'Principal Officer', department: 'Curriculum', email: 'genevieve.mensah@nacca.gov.gh', status: 'Active', joinDate: '2020-06-10' },
-    { id: 13, staffId: 'NAC-CD-0003', name: 'Thomas Kumah Osei', position: 'Principal Officer', department: 'Curriculum', email: 'thomas.osei@nacca.gov.gh', status: 'Active', joinDate: '2021-02-01' },
-    { id: 14, staffId: 'NAC-RS-0002', name: 'Abigail Owusu Birago', position: 'Principal Officer', department: 'Research', email: 'abigail.birago@nacca.gov.gh', status: 'Active', joinDate: '2021-07-15' },
-    { id: 15, staffId: 'NAC-IR-0002', name: 'Kenneth Wontumi', position: 'Principal Officer', department: 'Instructional Resources', email: 'kenneth.wontumi@nacca.gov.gh', status: 'Active', joinDate: '2020-11-01' },
-    { id: 16, staffId: 'NAC-CA-0002', name: 'Seth Nii Nartey', position: 'Corporate Affairs Officer', department: 'Corporate Affairs', email: 'seth.nartey@nacca.gov.gh', status: 'Active', joinDate: '2021-05-10' },
-    { id: 17, staffId: 'NAC-AD-0001', name: 'Gladys Gratias Tseh', position: 'Principal Administrative Officer', department: 'Administration', email: 'gladys.tseh@nacca.gov.gh', status: 'Active', joinDate: '2019-09-01' },
-    { id: 18, staffId: 'NAC-FN-0001', name: 'Prince Owusu Boateng', position: 'Accountant', department: 'Finance', email: 'prince.boateng@nacca.gov.gh', status: 'Active', joinDate: '2020-04-15' },
-    { id: 19, staffId: 'NAC-IT-0001', name: 'Dzineku Lawrence Senanu', position: 'Assistant IT Officer', department: 'ICT', email: 'dzineku.senanu@nacca.gov.gh', status: 'Active', joinDate: '2021-08-01' },
-    { id: 20, staffId: 'NAC-PR-0001', name: 'Nana Opoku Yeboah', position: 'Procurement Officer', department: 'Procurement', email: 'nana.yeboah@nacca.gov.gh', status: 'Active', joinDate: '2020-10-15' },
   ]);
 
   // Audit log entries
@@ -50,6 +31,8 @@ export default function EmployeesPage() {
     { id: 3, user: 'Elijah Intsiful', action: 'Approved leave request for Mary Ofori', timestamp: '2026-07-11 16:20:10', ip: '192.168.1.105' },
     { id: 4, user: 'System Admin', action: 'Deleted employee: Test User', timestamp: '2026-07-11 14:15:33', ip: '192.168.1.100' },
     { id: 5, user: 'Reginald Quartey', action: 'Submitted Curriculum report for approval', timestamp: '2026-07-11 11:05:47', ip: '192.168.1.108' },
+    { id: 6, user: 'System Admin', action: 'Bulk import: 15 employees added', timestamp: '2026-07-10 10:00:00', ip: '192.168.1.100' },
+    { id: 7, user: 'Prof. Samuel Ofori Bekoe', action: 'Approved Curriculum Development framework v2.4', timestamp: '2026-07-10 09:20:30', ip: '192.168.1.101' },
   ]);
 
   const departments = ['All', 'Executive', 'Assessment', 'Curriculum', 'Research', 'Instructional Resources', 'Human Resource', 'Corporate Affairs', 'Administration', 'Procurement', 'Finance', 'Internal Audit', 'ICT'];
@@ -68,233 +51,6 @@ export default function EmployeesPage() {
     const matchesDept = selectedDepartment === '' || selectedDepartment === 'All' || emp.department === selectedDepartment;
     return matchesSearch && matchesDept;
   });
-
-  // ============================================================
-  // 🔐 ACCOUNT CREATION FUNCTION - ADD THIS
-  // ============================================================
-  const handleCreateAccount = async (employee) => {
-    if (!confirm(`Create account for ${employee.name}?`)) {
-      return;
-    }
-  
-    setLoading(true);
-  
-    try {
-      const res = await fetch('/api/auth/create-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: employee.email,
-          name: employee.name,
-          staffId: employee.staffId,
-          department: employee.department,
-          role: 'STAFF'
-        })
-      });
-  
-      const data = await res.json();
-      console.log('API Response:', data);
-      
-      if (data.success) {
-        // Use prompt to show password (it's selectable and copyable)
-        const password = data.tempPassword || 'No password';
-        
-        // This will show a prompt with the password pre-filled
-        const result = prompt(
-          '✅ ACCOUNT CREATED!\n\n' +
-          'Employee: ' + employee.name + '\n' +
-          'Email: ' + employee.email + '\n' +
-          'Staff ID: ' + employee.staffId + '\n' +
-          'Department: ' + employee.department + '\n\n' +
-          '🔑 TEMPORARY PASSWORD: ' + password + '\n\n' +
-          'Copy this password and share it with the staff member.',
-          password
-        );
-        
-        // If user clicked OK, the password is ready to be copied
-        if (result !== null) {
-          alert('✅ Password ready to share!\n\nPassword: ' + password);
-        }
-      } else {
-        alert('❌ Failed: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('❌ Error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-// ============================================================
-// 📤 BULK IMPORT FUNCTIONS
-// ============================================================
-
-const handleBulkImport = () => {
-  setShowImportModal(true);
-  setImportFile(null);
-  setImportPreview([]);
-  setImportResults(null);
-};
-
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  
-  setImportFile(file);
-  
-  // Read the file
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    try {
-      const text = event.target.result;
-      const lines = text.split('\n').filter(line => line.trim());
-      
-      // Parse CSV
-      const headers = lines[0].split(',').map(h => h.trim());
-      const data = [];
-      
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
-        const row = {};
-        headers.forEach((header, index) => {
-          row[header] = values[index] || '';
-        });
-        data.push(row);
-      }
-      
-      setImportPreview(data);
-      setImportResults(null);
-    } catch (error) {
-      alert('❌ Error reading file: ' + error.message);
-    }
-  };
-  reader.readAsText(file);
-};
-
-const handleProcessImport = async () => {
-  if (importPreview.length === 0) {
-    alert('No data to import. Please upload a valid CSV file.');
-    return;
-  }
-
-  setImportLoading(true);
-  
-  try {
-    const results = {
-      total: importPreview.length,
-      success: 0,
-      failed: 0,
-      errors: []
-    };
-
-    // Get the headers from the first row
-    const headers = Object.keys(importPreview[0]);
-    console.log('📋 Detected headers:', headers);
-
-    // Map columns to expected fields (case insensitive)
-    const getField = (row, fieldNames) => {
-      for (const name of fieldNames) {
-        // Check exact match
-        if (row[name] !== undefined && row[name] !== '') return row[name];
-        // Check case insensitive
-        for (const key of Object.keys(row)) {
-          if (key.toLowerCase() === name.toLowerCase()) {
-            return row[key];
-          }
-        }
-      }
-      return '';
-    };
-
-    // Process each row
-    for (let i = 0; i < importPreview.length; i++) {
-      const row = importPreview[i];
-      
-      try {
-        const email = getField(row, ['email', 'Email', 'EMAIL']);
-        const name = getField(row, ['name', 'Name', 'NAME', 'fullName', 'FullName']);
-        const staffId = getField(row, ['staffId', 'StaffId', 'staffID', 'StaffID', 'staff_id', 'Staff ID']);
-        const department = getField(row, ['department', 'Department', 'dept', 'Dept', 'directorate', 'Directorate']);
-
-        console.log(`📝 Row ${i + 1}:`, { email, name, staffId, department });
-
-        if (!email || !name || !staffId || !department) {
-          results.failed++;
-          results.errors.push(`Row ${i + 1}: Missing fields (Email: ${email || 'missing'}, Name: ${name || 'missing'}, Staff ID: ${staffId || 'missing'}, Dept: ${department || 'missing'})`);
-          continue;
-        }
-
-        const response = await fetch('/api/auth/create-account', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email.trim(),
-            name: name.trim(),
-            staffId: staffId.trim(),
-            department: department.trim(),
-            role: 'STAFF'
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          results.success++;
-          console.log(`✅ ${email}: ${data.tempPassword}`);
-        } else {
-          results.failed++;
-          results.errors.push(`${email}: ${data.error || 'Unknown error'}`);
-        }
-      } catch (error) {
-        results.failed++;
-        results.errors.push(`Row ${i + 1}: ${error.message}`);
-      }
-    }
-
-    setImportResults(results);
-    setImportLoading(false);
-    
-    // Show summary
-    alert(
-      `📊 IMPORT COMPLETE!\n\n` +
-      `✅ Successful: ${results.success}\n` +
-      `❌ Failed: ${results.failed}\n` +
-      `📝 Total: ${results.total}\n\n` +
-      `${results.errors.length > 0 ? '⚠️ Errors:\n' + results.errors.slice(0, 10).join('\n') + (results.errors.length > 10 ? `\n... and ${results.errors.length - 10} more` : '') : '🎉 All accounts created successfully!'}`
-    );
-    
-    if (results.success > 0) {
-      // Refresh the page to show new employees
-      window.location.reload();
-    }
-    
-  } catch (error) {
-    setImportLoading(false);
-    alert('❌ Import failed: ' + error.message);
-  }
-};
-
-const downloadTemplate = () => {
-  const headers = ['email', 'name', 'staffId', 'department'];
-  const sampleData = [
-    ['john.doe@nacca.gov.gh', 'John Doe', 'NAC-CD-0100', 'Curriculum'],
-    ['jane.smith@nacca.gov.gh', 'Jane Smith', 'NAC-AS-0101', 'Assessment']
-  ];
-  
-  let csv = headers.join(',') + '\n';
-  sampleData.forEach(row => {
-    csv += row.join(',') + '\n';
-  });
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'staff_import_template.csv';
-  a.click();
-  window.URL.revokeObjectURL(url);
-};
 
   // Admin Actions
   const handleAddEmployee = (e) => {
@@ -336,7 +92,11 @@ const downloadTemplate = () => {
     alert(`📊 Exporting ${filteredEmployees.length} employees data...`);
   };
 
-   const handleClearFilters = () => {
+  const handleBulkImport = () => {
+    alert('📤 Bulk import dialog opened. Select a CSV/Excel file.');
+  };
+
+  const handleClearFilters = () => {
     setSearchTerm('');
     setSelectedDepartment('');
     setSelectedEmployees([]);
@@ -388,10 +148,11 @@ const downloadTemplate = () => {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setShowAddModal(true)} className="btn-primary">
+          {/* Admin Action Buttons */}
+          <button onClick={handleAddEmployee} className="btn-primary">
             <i className="fas fa-plus mr-2"></i>Add
           </button>
-          <button onClick={handleBulkImport} className="btn-secondary">
+          <button onClick={() => handleBulkImport()} className="btn-secondary">
             <i className="fas fa-upload mr-2"></i>Import
           </button>
           <button onClick={handleBulkExport} className="btn-outline">
@@ -489,22 +250,11 @@ const downloadTemplate = () => {
                   <td className="px-4 py-3" dangerouslySetInnerHTML={{ __html: getStatusBadge(emp.status) }} />
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View">
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      <button onClick={() => handleEditEmployee(emp.id)} className="text-[#F5A623] hover:bg-[#F5A623]/10 p-1.5 rounded-lg transition text-sm" title="Edit">
+                      <button onClick={() => handleEditEmployee(emp.id)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="Edit">
                         <i className="fas fa-edit"></i>
                       </button>
-                      {/* ============================================================ */}
-                      {/* 🆕 CREATE ACCOUNT BUTTON - ADD THIS */}
-                      {/* ============================================================ */}
-                      <button 
-                        onClick={() => handleCreateAccount(emp)} 
-                        className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm" 
-                        title="Create Account"
-                        disabled={loading}
-                      >
-                        <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-user-plus'}`}></i>
+                      <button className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm" title="View">
+                        <i className="fas fa-eye"></i>
                       </button>
                       <button onClick={() => handleDeleteEmployee(emp.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Delete">
                         <i className="fas fa-trash"></i>
@@ -709,132 +459,6 @@ const downloadTemplate = () => {
           </div>
         </div>
       )}
-      {/* Import Modal */}
-{showImportModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h5 className="font-bold text-xl">
-          <i className="fas fa-upload text-[#0056A3] mr-2"></i>
-          Bulk Import Employees
-        </h5>
-        <button onClick={() => setShowImportModal(false)} className="text-[#6b7a8a] hover:text-[#1a2a3a]">
-          <i className="fas fa-times text-xl"></i>
-        </button>
-      </div>
-
-      {/* Step 1: Download Template */}
-      <div className="mb-4 p-4 bg-blue-50 rounded-xl">
-        <p className="font-semibold text-blue-800 mb-2">📋 Step 1: Download Template</p>
-        <p className="text-sm text-blue-700 mb-2">Download the CSV template to ensure correct format.</p>
-        <button onClick={downloadTemplate} className="btn-primary text-sm">
-          <i className="fas fa-download mr-2"></i>Download Template
-        </button>
-      </div>
-
-      {/* Step 2: Upload File */}
-      <div className="mb-4 p-4 bg-gray-50 rounded-xl">
-        <p className="font-semibold text-gray-800 mb-2">📤 Step 2: Upload CSV File</p>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleFileUpload}
-          className="w-full p-2 border-2 border-dashed border-[#e2e8f0] rounded-xl cursor-pointer"
-        />
-        {importFile && (
-          <p className="text-sm text-green-600 mt-2">
-            ✅ File loaded: {importFile.name} ({importPreview.length} records)
-          </p>
-        )}
-      </div>
-
-      {/* Step 3: Preview Data */}
-      {importPreview.length > 0 && (
-        <div className="mb-4">
-          <p className="font-semibold text-gray-800 mb-2">
-            📊 Step 3: Preview Data ({importPreview.length} records)
-          </p>
-          <div className="overflow-x-auto max-h-60 border rounded-xl">
-            <table className="w-full text-sm">
-              <thead className="bg-[#f4f7fc] sticky top-0">
-                <tr>
-                  {Object.keys(importPreview[0]).map((key) => (
-                    <th key={key} className="px-3 py-2 text-left font-semibold text-[#6b7a8a]">{key}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e2e8f0]">
-                {importPreview.slice(0, 10).map((row, index) => (
-                  <tr key={index} className="hover:bg-[#f8fafc]">
-                    {Object.values(row).map((value, i) => (
-                      <td key={i} className="px-3 py-2">{value}</td>
-                    ))}
-                  </tr>
-                ))}
-                {importPreview.length > 10 && (
-                  <tr>
-                    <td colSpan={Object.keys(importPreview[0]).length} className="px-3 py-2 text-center text-[#6b7a8a]">
-                      ... and {importPreview.length - 10} more records
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Import Results */}
-      {importResults && (
-        <div className="mb-4 p-4 bg-gray-50 rounded-xl">
-          <p className="font-semibold text-gray-800 mb-2">📊 Import Results</p>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-green-100 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{importResults.success}</div>
-              <div className="text-xs text-green-700">Successful</div>
-            </div>
-            <div className="bg-red-100 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">{importResults.failed}</div>
-              <div className="text-xs text-red-700">Failed</div>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{importResults.total}</div>
-              <div className="text-xs text-blue-700">Total</div>
-            </div>
-          </div>
-          {importResults.errors.length > 0 && (
-            <div className="mt-3 max-h-32 overflow-y-auto">
-              {importResults.errors.map((err, i) => (
-                <p key={i} className="text-sm text-red-600">⚠️ {err}</p>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex gap-3 pt-4 border-t border-[#e2e8f0]">
-        <button onClick={() => setShowImportModal(false)} className="btn-outline flex-1">Cancel</button>
-        <button
-          onClick={handleProcessImport}
-          disabled={importPreview.length === 0 || importLoading}
-          className="btn-primary flex-1 disabled:opacity-50"
-        >
-          {importLoading ? (
-            <span className="flex items-center justify-center gap-2">
-              <i className="fas fa-spinner fa-spin"></i> Processing...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <i className="fas fa-upload"></i> Import {importPreview.length} Records
-            </span>
-          )}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
     </div>
   );
 }
-

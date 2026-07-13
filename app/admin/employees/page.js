@@ -188,17 +188,51 @@ const handleProcessImport = async () => {
       errors: []
     };
 
+    // Get the headers from the first row
+    const headers = Object.keys(importPreview[0]);
+    console.log('📋 Detected headers:', headers);
+
+    // Map columns to expected fields (case insensitive)
+    const getField = (row, fieldNames) => {
+      for (const name of fieldNames) {
+        // Check exact match
+        if (row[name] !== undefined && row[name] !== '') return row[name];
+        // Check case insensitive
+        for (const key of Object.keys(row)) {
+          if (key.toLowerCase() === name.toLowerCase()) {
+            return row[key];
+          }
+        }
+      }
+      return '';
+    };
+
     // Process each row
-    for (const row of importPreview) {
+    for (let i = 0; i < importPreview.length; i++) {
+      const row = importPreview[i];
+      
       try {
+        const email = getField(row, ['email', 'Email', 'EMAIL']);
+        const name = getField(row, ['name', 'Name', 'NAME', 'fullName', 'FullName']);
+        const staffId = getField(row, ['staffId', 'StaffId', 'staffID', 'StaffID', 'staff_id', 'Staff ID']);
+        const department = getField(row, ['department', 'Department', 'dept', 'Dept', 'directorate', 'Directorate']);
+
+        console.log(`📝 Row ${i + 1}:`, { email, name, staffId, department });
+
+        if (!email || !name || !staffId || !department) {
+          results.failed++;
+          results.errors.push(`Row ${i + 1}: Missing fields (Email: ${email || 'missing'}, Name: ${name || 'missing'}, Staff ID: ${staffId || 'missing'}, Dept: ${department || 'missing'})`);
+          continue;
+        }
+
         const response = await fetch('/api/auth/create-account', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: row.email || row.Email || '',
-            name: row.name || row.Name || '',
-            staffId: row.staffId || row.StaffID || row['Staff ID'] || '',
-            department: row.department || row.Department || '',
+            email: email.trim(),
+            name: name.trim(),
+            staffId: staffId.trim(),
+            department: department.trim(),
             role: 'STAFF'
           })
         });
@@ -207,15 +241,14 @@ const handleProcessImport = async () => {
         
         if (data.success) {
           results.success++;
-          // Show password in console for now
-          console.log(`✅ ${row.name || row.Name}: ${data.tempPassword}`);
+          console.log(`✅ ${email}: ${data.tempPassword}`);
         } else {
           results.failed++;
-          results.errors.push(`${row.name || row.Email}: ${data.error}`);
+          results.errors.push(`${email}: ${data.error || 'Unknown error'}`);
         }
       } catch (error) {
         results.failed++;
-        results.errors.push(`${row.name || row.Email}: ${error.message}`);
+        results.errors.push(`Row ${i + 1}: ${error.message}`);
       }
     }
 
@@ -228,11 +261,13 @@ const handleProcessImport = async () => {
       `✅ Successful: ${results.success}\n` +
       `❌ Failed: ${results.failed}\n` +
       `📝 Total: ${results.total}\n\n` +
-      `${results.errors.length > 0 ? '⚠️ Errors:\n' + results.errors.join('\n') : 'All accounts created successfully!'}`
+      `${results.errors.length > 0 ? '⚠️ Errors:\n' + results.errors.slice(0, 10).join('\n') + (results.errors.length > 10 ? `\n... and ${results.errors.length - 10} more` : '') : '🎉 All accounts created successfully!'}`
     );
     
-    // Refresh the page to show new employees
-    window.location.reload();
+    if (results.success > 0) {
+      // Refresh the page to show new employees
+      window.location.reload();
+    }
     
   } catch (error) {
     setImportLoading(false);
@@ -301,11 +336,7 @@ const downloadTemplate = () => {
     alert(`📊 Exporting ${filteredEmployees.length} employees data...`);
   };
 
-  const handleBulkImport = () => {
-    alert('📤 Bulk import dialog opened. Select a CSV/Excel file.');
-  };
-
-  const handleClearFilters = () => {
+   const handleClearFilters = () => {
     setSearchTerm('');
     setSelectedDepartment('');
     setSelectedEmployees([]);
@@ -806,3 +837,4 @@ const downloadTemplate = () => {
     </div>
   );
 }
+

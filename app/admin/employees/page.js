@@ -211,15 +211,6 @@ export default function EmployeesPage() {
   // 🔐 CREATE ACCOUNT
   // ============================================================
   const handleCreateAccount = async (employee) => {
-    // Check if user already exists
-    try {
-      const checkRes = await fetch(`/api/employees?email=${encodeURIComponent(employee.email)}`);
-      // If the employee exists in the system, they already have an account
-      // We need to check if they have a password set or if they're in the users object
-    } catch (error) {
-      // Continue with account creation
-    }
-  
     if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nStaff ID: ${employee.staffId}`)) return;
     
     setLoading(true);
@@ -240,13 +231,12 @@ export default function EmployeesPage() {
       const data = await res.json();
       
       if (data.success) {
-        const password = data.tempPassword || 'No password';
-        alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n🔑 Temporary Password: ${password}\n\nPlease share this password with the employee.`);
+        // ✅ Password is sent via email - no password displayed on screen
+        alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n\n📧 A temporary password has been sent to the employee's email.\n\nPlease ask them to check their email and change their password on first login.`);
         await fetchEmployees();
       } else {
-        // If user already exists, show a helpful message
         if (data.error && data.error.includes('already exists')) {
-          alert(`ℹ️ Account already exists for ${employee.name}\n\nEmail: ${employee.email}\n\nThey can login with their existing password or use "Forgot Password" to reset it.`);
+          alert(`ℹ️ ${employee.name} already has an account.\n\nEmail: ${employee.email}\n\nThey can login with their existing password.`);
         } else {
           alert('❌ Failed: ' + (data.error || 'Unknown error'));
         }

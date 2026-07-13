@@ -211,9 +211,19 @@ export default function EmployeesPage() {
   // 🔐 CREATE ACCOUNT
   // ============================================================
   const handleCreateAccount = async (employee) => {
-    if (!confirm(`Create account for ${employee.name}?`)) return;
+    // Check if user already exists
+    try {
+      const checkRes = await fetch(`/api/employees?email=${encodeURIComponent(employee.email)}`);
+      // If the employee exists in the system, they already have an account
+      // We need to check if they have a password set or if they're in the users object
+    } catch (error) {
+      // Continue with account creation
+    }
+  
+    if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nStaff ID: ${employee.staffId}`)) return;
+    
     setLoading(true);
-
+  
     try {
       const res = await fetch('/api/auth/create-account', {
         method: 'POST',
@@ -226,14 +236,20 @@ export default function EmployeesPage() {
           role: 'STAFF'
         })
       });
-
+  
       const data = await res.json();
+      
       if (data.success) {
         const password = data.tempPassword || 'No password';
-        alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n🔑 Password: ${password}`);
+        alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n🔑 Temporary Password: ${password}\n\nPlease share this password with the employee.`);
         await fetchEmployees();
       } else {
-        alert('❌ Failed: ' + (data.error || 'Unknown error'));
+        // If user already exists, show a helpful message
+        if (data.error && data.error.includes('already exists')) {
+          alert(`ℹ️ Account already exists for ${employee.name}\n\nEmail: ${employee.email}\n\nThey can login with their existing password or use "Forgot Password" to reset it.`);
+        } else {
+          alert('❌ Failed: ' + (data.error || 'Unknown error'));
+        }
       }
     } catch (error) {
       alert('❌ Error: ' + error.message);

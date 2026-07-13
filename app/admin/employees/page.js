@@ -256,24 +256,38 @@ export default function EmployeesPage() {
     
     const fullName = `${addFormData.firstName} ${addFormData.lastName}`.trim();
     
+    // Validate required fields
+    if (!addFormData.email || !fullName || !addFormData.department || !addFormData.position) {
+      alert('❌ Please fill in all required fields: Name, Email, Department, and Position.');
+      return;
+    }
+  
+    // Validate email format
+    if (!addFormData.email.includes('@') || !addFormData.email.includes('.')) {
+      alert('❌ Please enter a valid email address.');
+      return;
+    }
+  
+    setLoading(true);
+  
     try {
       const res = await fetch('/api/employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: addFormData.email,
-          name: fullName,
-          department: addFormData.department,
-          position: addFormData.position,
-          status: addFormData.status,
-          joinDate: addFormData.joinDate
+          email: addFormData.email.trim(),
+          name: fullName.trim(),
+          department: addFormData.department.trim(),
+          position: addFormData.position.trim(),
+          status: addFormData.status || 'Active',
+          joinDate: addFormData.joinDate || new Date().toISOString().split('T')[0]
         })
       });
-
+  
       const data = await res.json();
       
       if (data.success) {
-        alert(`✅ Employee added successfully!\n\nName: ${fullName}\nEmail: ${addFormData.email}\nStaff ID: ${data.employee.staffId}\n\nTemporary Password: ${data.tempPassword}`);
+        alert(`✅ Employee added successfully!\n\nName: ${fullName}\nEmail: ${addFormData.email}\nStaff ID: ${data.employee.staffId}\n\nTemporary Password: ${data.tempPassword}\n\n📧 Password has been sent to the employee's email.`);
         setShowAddModal(false);
         setAddFormData({
           firstName: '',
@@ -290,6 +304,8 @@ export default function EmployeesPage() {
       }
     } catch (error) {
       alert('❌ Error adding employee: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -769,6 +785,20 @@ export default function EmployeesPage() {
                 <div><label className="font-semibold text-sm">Status</label><select name="status" className="w-full p-2 border rounded-lg mt-1" value={addFormData.status} onChange={handleAddFormChange}><option>Active</option><option>On Leave</option><option>Inactive</option></select></div>
                 <div className="col-span-2"><label className="font-semibold text-sm">Join Date</label><input type="date" name="joinDate" className="w-full p-2 border rounded-lg mt-1" value={addFormData.joinDate} onChange={handleAddFormChange} /></div>
               </div>
+
+
+        {/* ============================================================ */}
+        {/* 🔍 DEBUG SECTION - ADD THIS HERE */}
+        {/* ============================================================ */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs font-mono overflow-auto max-h-32">
+            <p className="font-semibold text-gray-700 mb-1">📋 Debug Info:</p>
+            <pre className="text-gray-600 whitespace-pre-wrap">
+              {JSON.stringify(addFormData, null, 2)}
+            </pre>
+          </div>
+        )}
+
               <div className="flex gap-3 pt-4 mt-4 border-t border-[#e2e8f0]">
                 <button type="button" onClick={() => setShowAddModal(false)} className="btn-outline flex-1">Cancel</button>
                 <button type="submit" className="btn-primary flex-1"><i className="fas fa-save mr-2"></i>Add Employee</button>

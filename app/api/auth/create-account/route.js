@@ -186,16 +186,32 @@ async function sendPasswordEmail(email, name, tempPassword) {
 // ============================================================
 // 📝 CREATE ACCOUNT API
 // ============================================================
+// POST - Add new employee
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, name, staffId, department, role = 'STAFF' } = body;
+    console.log('📝 Received data:', body);
 
-    console.log('📝 Creating account for:', email);
+    const { email, name, staffId, department, position, status, joinDate } = body;
 
-    if (!email || !name || !staffId || !department) {
+    // Validate required fields
+    const errors = [];
+    if (!email) errors.push('Email is required');
+    if (!name) errors.push('Name is required');
+    if (!department) errors.push('Department is required');
+    if (!position) errors.push('Position is required');
+
+    if (errors.length > 0) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: ' + errors.join(', ') },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    if (!email.includes('@') || !email.includes('.')) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
         { status: 400 }
       );
     }
@@ -203,43 +219,53 @@ export async function POST(request) {
     // Check if user already exists
     if (users[email]) {
       return NextResponse.json(
-        { 
-          error: 'User already exists', 
-          message: 'This employee already has an account.'
-        },
+        { error: 'Employee with this email already exists' },
         { status: 400 }
       );
     }
 
-    const result = createStaffAccount(email, name, staffId, department, role);
-    console.log('✅ Account created:', result);
+    // Generate staff ID if not provided
+    const newStaffId = staffId || `NAC-${String(Object.keys(users).length + 1).padStart(4, '0')}`;
+    const tempPassword = generateTempPassword();
 
-    if (result.success) {
-      // Send email with password
-      const emailResult = await sendPasswordEmail(email, name, result.tempPassword);
+    // Create user in database
+    users[email] = {
+      password: null,
+      name: name,
+      role: position || 'STAFF',
+      staffId: newStaffId,
+      department: department || 'N/A',
+      isFirstLogin: true,
+      passwordChangedAt: null,
+      passwordHistory: [],
+      accountLocked: false,
+      failedAttempts: 0,
+      lastLogin: null
+    };
 
-      return NextResponse.json({
-        success: true,
-        message: emailResult.success 
-          ? 'Account created. Password sent to email.' 
-          : 'Account created but email failed. Password logged to console.',
-        user: {
-          email: result.user.email,
-          name: result.user.name,
-          role: result.user.role,
-          staffId: result.user.staffId
-        }
-      });
-    } else {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
-      );
-    }
+    tempPasswords[email] = tempPassword;
+
+    console.log('✅ Employee added successfully:', { email, name, newStaffId });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Employee added successfully',
+      tempPassword: tempPassword,
+      employee: {
+        email,
+        name,
+        staffId: newStaffId,
+        department: department || 'N/A',
+        position: position || 'STAFF',
+        status: status || 'Active',
+        joinDate: joinDate || new Date().toISOString().split('T')[0]
+      }
+    });
+
   } catch (error) {
-    console.error('❌ Create account error:', error);
+    console.error('❌ Error adding employee:', error);
     return NextResponse.json(
-      { error: 'Failed to create account: ' + error.message },
+      { error: 'Failed to add employee: ' + error.message },
       { status: 500 }
     );
   }

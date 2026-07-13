@@ -11,6 +11,12 @@ export default function EmployeesPage() {
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importPreview, setImportPreview] = useState([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResults, setImportResults] = useState(null);
+  
 
   // Full employee data
   const [employees, setEmployees] = useState([
@@ -119,6 +125,141 @@ export default function EmployeesPage() {
       setLoading(false);
     }
   };
+
+// ============================================================
+// 📤 BULK IMPORT FUNCTIONS
+// ============================================================
+
+const handleBulkImport = () => {
+  setShowImportModal(true);
+  setImportFile(null);
+  setImportPreview([]);
+  setImportResults(null);
+};
+
+const handleFileUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  setImportFile(file);
+  
+  // Read the file
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const text = event.target.result;
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      // Parse CSV
+      const headers = lines[0].split(',').map(h => h.trim());
+      const data = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+        data.push(row);
+      }
+      
+      setImportPreview(data);
+      setImportResults(null);
+    } catch (error) {
+      alert('❌ Error reading file: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+};
+
+const handleProcessImport = async () => {
+  if (importPreview.length === 0) {
+    alert('No data to import. Please upload a valid CSV file.');
+    return;
+  }
+
+  setImportLoading(true);
+  
+  try {
+    const results = {
+      total: importPreview.length,
+      success: 0,
+      failed: 0,
+      errors: []
+    };
+
+    // Process each row
+    for (const row of importPreview) {
+      try {
+        const response = await fetch('/api/auth/create-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: row.email || row.Email || '',
+            name: row.name || row.Name || '',
+            staffId: row.staffId || row.StaffID || row['Staff ID'] || '',
+            department: row.department || row.Department || '',
+            role: 'STAFF'
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          results.success++;
+          // Show password in console for now
+          console.log(`✅ ${row.name || row.Name}: ${data.tempPassword}`);
+        } else {
+          results.failed++;
+          results.errors.push(`${row.name || row.Email}: ${data.error}`);
+        }
+      } catch (error) {
+        results.failed++;
+        results.errors.push(`${row.name || row.Email}: ${error.message}`);
+      }
+    }
+
+    setImportResults(results);
+    setImportLoading(false);
+    
+    // Show summary
+    alert(
+      `📊 IMPORT COMPLETE!\n\n` +
+      `✅ Successful: ${results.success}\n` +
+      `❌ Failed: ${results.failed}\n` +
+      `📝 Total: ${results.total}\n\n` +
+      `${results.errors.length > 0 ? '⚠️ Errors:\n' + results.errors.join('\n') : 'All accounts created successfully!'}`
+    );
+    
+    // Refresh the page to show new employees
+    window.location.reload();
+    
+  } catch (error) {
+    setImportLoading(false);
+    alert('❌ Import failed: ' + error.message);
+  }
+};
+
+const downloadTemplate = () => {
+  const headers = ['email', 'name', 'staffId', 'department'];
+  const sampleData = [
+    ['john.doe@nacca.gov.gh', 'John Doe', 'NAC-CD-0100', 'Curriculum'],
+    ['jane.smith@nacca.gov.gh', 'Jane Smith', 'NAC-AS-0101', 'Assessment']
+  ];
+  
+  let csv = headers.join(',') + '\n';
+  sampleData.forEach(row => {
+    csv += row.join(',') + '\n';
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'staff_import_template.csv';
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
   // Admin Actions
   const handleAddEmployee = (e) => {
@@ -537,6 +678,131 @@ export default function EmployeesPage() {
           </div>
         </div>
       )}
+      {/* Import Modal */}
+{showImportModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h5 className="font-bold text-xl">
+          <i className="fas fa-upload text-[#0056A3] mr-2"></i>
+          Bulk Import Employees
+        </h5>
+        <button onClick={() => setShowImportModal(false)} className="text-[#6b7a8a] hover:text-[#1a2a3a]">
+          <i className="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      {/* Step 1: Download Template */}
+      <div className="mb-4 p-4 bg-blue-50 rounded-xl">
+        <p className="font-semibold text-blue-800 mb-2">📋 Step 1: Download Template</p>
+        <p className="text-sm text-blue-700 mb-2">Download the CSV template to ensure correct format.</p>
+        <button onClick={downloadTemplate} className="btn-primary text-sm">
+          <i className="fas fa-download mr-2"></i>Download Template
+        </button>
+      </div>
+
+      {/* Step 2: Upload File */}
+      <div className="mb-4 p-4 bg-gray-50 rounded-xl">
+        <p className="font-semibold text-gray-800 mb-2">📤 Step 2: Upload CSV File</p>
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleFileUpload}
+          className="w-full p-2 border-2 border-dashed border-[#e2e8f0] rounded-xl cursor-pointer"
+        />
+        {importFile && (
+          <p className="text-sm text-green-600 mt-2">
+            ✅ File loaded: {importFile.name} ({importPreview.length} records)
+          </p>
+        )}
+      </div>
+
+      {/* Step 3: Preview Data */}
+      {importPreview.length > 0 && (
+        <div className="mb-4">
+          <p className="font-semibold text-gray-800 mb-2">
+            📊 Step 3: Preview Data ({importPreview.length} records)
+          </p>
+          <div className="overflow-x-auto max-h-60 border rounded-xl">
+            <table className="w-full text-sm">
+              <thead className="bg-[#f4f7fc] sticky top-0">
+                <tr>
+                  {Object.keys(importPreview[0]).map((key) => (
+                    <th key={key} className="px-3 py-2 text-left font-semibold text-[#6b7a8a]">{key}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e2e8f0]">
+                {importPreview.slice(0, 10).map((row, index) => (
+                  <tr key={index} className="hover:bg-[#f8fafc]">
+                    {Object.values(row).map((value, i) => (
+                      <td key={i} className="px-3 py-2">{value}</td>
+                    ))}
+                  </tr>
+                ))}
+                {importPreview.length > 10 && (
+                  <tr>
+                    <td colSpan={Object.keys(importPreview[0]).length} className="px-3 py-2 text-center text-[#6b7a8a]">
+                      ... and {importPreview.length - 10} more records
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Import Results */}
+      {importResults && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-xl">
+          <p className="font-semibold text-gray-800 mb-2">📊 Import Results</p>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-green-100 p-3 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{importResults.success}</div>
+              <div className="text-xs text-green-700">Successful</div>
+            </div>
+            <div className="bg-red-100 p-3 rounded-lg">
+              <div className="text-2xl font-bold text-red-600">{importResults.failed}</div>
+              <div className="text-xs text-red-700">Failed</div>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">{importResults.total}</div>
+              <div className="text-xs text-blue-700">Total</div>
+            </div>
+          </div>
+          {importResults.errors.length > 0 && (
+            <div className="mt-3 max-h-32 overflow-y-auto">
+              {importResults.errors.map((err, i) => (
+                <p key={i} className="text-sm text-red-600">⚠️ {err}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-3 pt-4 border-t border-[#e2e8f0]">
+        <button onClick={() => setShowImportModal(false)} className="btn-outline flex-1">Cancel</button>
+        <button
+          onClick={handleProcessImport}
+          disabled={importPreview.length === 0 || importLoading}
+          className="btn-primary flex-1 disabled:opacity-50"
+        >
+          {importLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <i className="fas fa-spinner fa-spin"></i> Processing...
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <i className="fas fa-upload"></i> Import {importPreview.length} Records
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

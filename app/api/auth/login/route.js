@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { users, tempPasswords, changePassword, resetPassword, initDemoUsers } from '@/lib/users';
+import { users, tempPasswords, changePassword, resetPassword, initDemoUsers } from '../../../../lib/users';
 
 // Initialize demo users
 initDemoUsers();
@@ -9,19 +9,15 @@ export async function POST(request) {
     const body = await request.json();
     const { email, password, newPassword, confirmPassword, action } = body;
 
-    // Handle Forgot Password
     if (action === 'reset_password') {
       return await handleForgotPassword(email);
     }
 
-    // Handle Password Change (First Login)
     if (action === 'change_password') {
       return await handlePasswordChange(email, password, newPassword, confirmPassword);
     }
 
-    // Regular Login
     return await handleLogin(email, password);
-
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
@@ -33,7 +29,7 @@ export async function POST(request) {
 
 async function handleLogin(email, password) {
   const user = users[email];
-  
+
   if (!user) {
     return NextResponse.json(
       { error: 'Invalid email or password' },
@@ -41,7 +37,6 @@ async function handleLogin(email, password) {
     );
   }
 
-  // Check if account is locked
   if (user.accountLocked) {
     return NextResponse.json(
       { error: 'Account is locked. Please contact HR or System Administrator.' },
@@ -49,13 +44,10 @@ async function handleLogin(email, password) {
     );
   }
 
-  // Check if using temporary password
   const isTempPassword = tempPasswords[email] === password;
   const isValidPassword = user.password === password;
 
-  // For first-time login, allow temp password
   if (user.isFirstLogin && isTempPassword) {
-    // Successful login with temp password
     user.failedAttempts = 0;
     user.lastLogin = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
@@ -90,10 +82,9 @@ async function handleLogin(email, password) {
     return response;
   }
 
-  // Normal password check
   if (!isValidPassword) {
     user.failedAttempts = (user.failedAttempts || 0) + 1;
-    
+
     if (user.failedAttempts >= 5) {
       user.accountLocked = true;
       return NextResponse.json(
@@ -103,12 +94,11 @@ async function handleLogin(email, password) {
     }
 
     return NextResponse.json(
-      { error: `Invalid email or password. ${5 - user.failedAttempts} attempts remaining.` },
+      { error: 'Invalid email or password.' },
       { status: 401 }
     );
   }
 
-  // Successful login
   user.failedAttempts = 0;
   user.lastLogin = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
@@ -144,7 +134,7 @@ async function handleLogin(email, password) {
 
 async function handlePasswordChange(email, currentPassword, newPassword, confirmPassword) {
   const user = users[email];
-  
+
   if (!user) {
     return NextResponse.json(
       { error: 'User not found' },
@@ -152,7 +142,6 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
     );
   }
 
-  // Verify current password (either temp or actual)
   const isValidCurrent = user.password === currentPassword || tempPasswords[email] === currentPassword;
   if (!isValidCurrent) {
     return NextResponse.json(
@@ -161,7 +150,6 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
     );
   }
 
-  // Validate new password
   const validationErrors = validatePassword(newPassword, confirmPassword, currentPassword, user);
 
   if (validationErrors.length > 0) {
@@ -171,11 +159,9 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
     );
   }
 
-  // Change password
   const result = changePassword(email, newPassword);
 
   if (result.success) {
-    // Send email notification (simulated)
     sendPasswordChangeEmail(email, user.name);
 
     return NextResponse.json({
@@ -192,7 +178,7 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
 
 async function handleForgotPassword(email) {
   const user = users[email];
-  
+
   if (!user) {
     return NextResponse.json({
       success: true,
@@ -203,7 +189,6 @@ async function handleForgotPassword(email) {
   const result = resetPassword(email);
 
   if (result.success) {
-    // Send email with temporary password
     sendPasswordResetEmail(email, user.name, result.tempPassword);
 
     return NextResponse.json({
@@ -247,47 +232,43 @@ function validatePassword(newPassword, confirmPassword, currentPassword, user) {
 }
 
 function sendPasswordChangeEmail(email, name) {
-  console.log(`
-    ========================================
-    📧 PASSWORD CHANGED NOTIFICATION
-    ========================================
-    To: ${email}
-    From: noreply@nacca.gov.gh
-    Subject: Password Changed - NaCCA HRMIS
-    
-    Dear ${name},
-    
-    Your password has been changed successfully.
-    
-    If you did not make this change, please contact HR immediately.
-    
-    Regards,
-    NaCCA HRMIS System
-    ========================================
-  `);
+  console.log('========================================');
+  console.log('?? PASSWORD CHANGED NOTIFICATION');
+  console.log('========================================');
+  console.log('To:', email);
+  console.log('From: noreply@nacca.gov.gh');
+  console.log('Subject: Password Changed - NaCCA HRMIS');
+  console.log('');
+  console.log('Dear', name + ',');
+  console.log('');
+  console.log('Your password has been changed successfully.');
+  console.log('');
+  console.log('If you did not make this change, please contact HR immediately.');
+  console.log('');
+  console.log('Regards,');
+  console.log('NaCCA HRMIS System');
+  console.log('========================================');
 }
 
 function sendPasswordResetEmail(email, name, tempPassword) {
-  console.log(`
-    ========================================
-    📧 PASSWORD RESET
-    ========================================
-    To: ${email}
-    From: noreply@nacca.gov.gh
-    Subject: Password Reset - NaCCA HRMIS
-    
-    Dear ${name},
-    
-    Your password has been reset.
-    
-    Temporary Password: ${tempPassword}
-    
-    IMPORTANT: Please login with this temporary password and change it immediately.
-    
-    Login URL: https://nacca-hrmis.vercel.app
-    
-    Regards,
-    NaCCA HRMIS System
-    ========================================
-  `);
+  console.log('========================================');
+  console.log('?? PASSWORD RESET');
+  console.log('========================================');
+  console.log('To:', email);
+  console.log('From: noreply@nacca.gov.gh');
+  console.log('Subject: Password Reset - NaCCA HRMIS');
+  console.log('');
+  console.log('Dear', name + ',');
+  console.log('');
+  console.log('Your password has been reset.');
+  console.log('');
+  console.log('Temporary Password:', tempPassword);
+  console.log('');
+  console.log('IMPORTANT: Please login with this temporary password and change it immediately.');
+  console.log('');
+  console.log('Login URL: https://nacca-hrmis.vercel.app');
+  console.log('');
+  console.log('Regards,');
+  console.log('NaCCA HRMIS System');
+  console.log('========================================');
 }

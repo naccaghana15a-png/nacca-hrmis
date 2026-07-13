@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createStaffAccount } from '@/lib/users';
+import { createStaffAccount } from '../../../../lib/users';
 
 export async function POST(request) {
   try {
@@ -29,6 +29,7 @@ export async function POST(request) {
       );
     }
   } catch (error) {
+    console.error('Create account error:', error);
     return NextResponse.json(
       { error: 'Failed to create account' },
       { status: 500 }

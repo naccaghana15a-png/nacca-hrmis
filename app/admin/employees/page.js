@@ -70,9 +70,9 @@ export default function EmployeesPage() {
     if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nDepartment: ${employee.department}`)) {
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       const res = await fetch('/api/auth/create-account', {
         method: 'POST',
@@ -85,11 +85,28 @@ export default function EmployeesPage() {
           role: 'STAFF'
         })
       });
-
+  
       const data = await res.json();
       
       if (data.success) {
-        alert(`✅ ACCOUNT CREATED SUCCESSFULLY!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\nTemporary Password: ${data.tempPassword}\n\nPlease share this password with the staff member.\nThey will be required to change it on first login.`);
+        // Create a more visible password display
+        const passwordMessage = 
+          '✅ ACCOUNT CREATED SUCCESSFULLY!\n\n' +
+          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+          `👤 Employee: ${employee.name}\n` +
+          `📧 Email: ${employee.email}\n` +
+          `🆔 Staff ID: ${employee.staffId}\n` +
+          `🏢 Department: ${employee.department}\n` +
+          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+          `🔑 TEMPORARY PASSWORD: ${data.tempPassword}\n` +
+          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+          '⚠️ IMPORTANT INSTRUCTIONS:\n' +
+          '• Share this password with the staff member\n' +
+          '• They must change it on first login\n' +
+          '• Password must be at least 8 characters\n' +
+          '• Must include uppercase, lowercase, number, and special character';
+        
+        alert(passwordMessage);
       } else {
         alert(`❌ Failed to create account: ${data.error || 'Unknown error'}`);
       }

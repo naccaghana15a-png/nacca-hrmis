@@ -10,6 +10,7 @@ export default function EmployeesPage() {
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Full employee data
   const [employees, setEmployees] = useState([
@@ -22,6 +23,18 @@ export default function EmployeesPage() {
     { id: 7, staffId: 'NAC-IR-0001', name: 'Joana Vanderpuje', position: 'Ag. Director, Instructional Resources', department: 'Instructional Resources', email: 'joana.vanderpuje@nacca.gov.gh', status: 'Active', joinDate: '2020-09-05' },
     { id: 8, staffId: 'NAC-HR-0001', name: 'Elijah Intsiful', position: 'Ag. Director, Human Resources & Admin', department: 'Human Resource', email: 'elijah.intsiful@nacca.gov.gh', status: 'Active', joinDate: '2018-02-14' },
     { id: 9, staffId: 'NAC-CA-0001', name: 'Rebecca Abu Gariba', position: 'Ag. Director, Corporate Affairs', department: 'Corporate Affairs', email: 'rebecca.gariba@nacca.gov.gh', status: 'Active', joinDate: '2020-07-22' },
+    // Staff
+    { id: 10, staffId: 'NAC-AS-0002', name: 'Joachim Kwame Seyram Honu', position: 'Principal Officer', department: 'Assessment', email: 'joachim.honu@nacca.gov.gh', status: 'Active', joinDate: '2021-01-15' },
+    { id: 11, staffId: 'NAC-AS-0003', name: 'Richard Teye', position: 'Principal Officer', department: 'Assessment', email: 'richard.teye@nacca.gov.gh', status: 'Active', joinDate: '2021-03-20' },
+    { id: 12, staffId: 'NAC-CD-0002', name: 'Genevieve Mensah', position: 'Principal Officer', department: 'Curriculum', email: 'genevieve.mensah@nacca.gov.gh', status: 'Active', joinDate: '2020-06-10' },
+    { id: 13, staffId: 'NAC-CD-0003', name: 'Thomas Kumah Osei', position: 'Principal Officer', department: 'Curriculum', email: 'thomas.osei@nacca.gov.gh', status: 'Active', joinDate: '2021-02-01' },
+    { id: 14, staffId: 'NAC-RS-0002', name: 'Abigail Owusu Birago', position: 'Principal Officer', department: 'Research', email: 'abigail.birago@nacca.gov.gh', status: 'Active', joinDate: '2021-07-15' },
+    { id: 15, staffId: 'NAC-IR-0002', name: 'Kenneth Wontumi', position: 'Principal Officer', department: 'Instructional Resources', email: 'kenneth.wontumi@nacca.gov.gh', status: 'Active', joinDate: '2020-11-01' },
+    { id: 16, staffId: 'NAC-CA-0002', name: 'Seth Nii Nartey', position: 'Corporate Affairs Officer', department: 'Corporate Affairs', email: 'seth.nartey@nacca.gov.gh', status: 'Active', joinDate: '2021-05-10' },
+    { id: 17, staffId: 'NAC-AD-0001', name: 'Gladys Gratias Tseh', position: 'Principal Administrative Officer', department: 'Administration', email: 'gladys.tseh@nacca.gov.gh', status: 'Active', joinDate: '2019-09-01' },
+    { id: 18, staffId: 'NAC-FN-0001', name: 'Prince Owusu Boateng', position: 'Accountant', department: 'Finance', email: 'prince.boateng@nacca.gov.gh', status: 'Active', joinDate: '2020-04-15' },
+    { id: 19, staffId: 'NAC-IT-0001', name: 'Dzineku Lawrence Senanu', position: 'Assistant IT Officer', department: 'ICT', email: 'dzineku.senanu@nacca.gov.gh', status: 'Active', joinDate: '2021-08-01' },
+    { id: 20, staffId: 'NAC-PR-0001', name: 'Nana Opoku Yeboah', position: 'Procurement Officer', department: 'Procurement', email: 'nana.yeboah@nacca.gov.gh', status: 'Active', joinDate: '2020-10-15' },
   ]);
 
   // Audit log entries
@@ -31,8 +44,6 @@ export default function EmployeesPage() {
     { id: 3, user: 'Elijah Intsiful', action: 'Approved leave request for Mary Ofori', timestamp: '2026-07-11 16:20:10', ip: '192.168.1.105' },
     { id: 4, user: 'System Admin', action: 'Deleted employee: Test User', timestamp: '2026-07-11 14:15:33', ip: '192.168.1.100' },
     { id: 5, user: 'Reginald Quartey', action: 'Submitted Curriculum report for approval', timestamp: '2026-07-11 11:05:47', ip: '192.168.1.108' },
-    { id: 6, user: 'System Admin', action: 'Bulk import: 15 employees added', timestamp: '2026-07-10 10:00:00', ip: '192.168.1.100' },
-    { id: 7, user: 'Prof. Samuel Ofori Bekoe', action: 'Approved Curriculum Development framework v2.4', timestamp: '2026-07-10 09:20:30', ip: '192.168.1.101' },
   ]);
 
   const departments = ['All', 'Executive', 'Assessment', 'Curriculum', 'Research', 'Instructional Resources', 'Human Resource', 'Corporate Affairs', 'Administration', 'Procurement', 'Finance', 'Internal Audit', 'ICT'];
@@ -51,6 +62,43 @@ export default function EmployeesPage() {
     const matchesDept = selectedDepartment === '' || selectedDepartment === 'All' || emp.department === selectedDepartment;
     return matchesSearch && matchesDept;
   });
+
+  // ============================================================
+  // 🔐 ACCOUNT CREATION FUNCTION - ADD THIS
+  // ============================================================
+  const handleCreateAccount = async (employee) => {
+    if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nDepartment: ${employee.department}`)) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/create-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: employee.email,
+          name: employee.name,
+          staffId: employee.staffId,
+          department: employee.department,
+          role: 'STAFF'
+        })
+      });
+
+      const data = await res.json();
+      
+      if (data.success) {
+        alert(`✅ ACCOUNT CREATED SUCCESSFULLY!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\nTemporary Password: ${data.tempPassword}\n\nPlease share this password with the staff member.\nThey will be required to change it on first login.`);
+      } else {
+        alert(`❌ Failed to create account: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('❌ An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Admin Actions
   const handleAddEmployee = (e) => {
@@ -148,11 +196,10 @@ export default function EmployeesPage() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {/* Admin Action Buttons */}
-          <button onClick={handleAddEmployee} className="btn-primary">
+          <button onClick={() => setShowAddModal(true)} className="btn-primary">
             <i className="fas fa-plus mr-2"></i>Add
           </button>
-          <button onClick={() => handleBulkImport()} className="btn-secondary">
+          <button onClick={handleBulkImport} className="btn-secondary">
             <i className="fas fa-upload mr-2"></i>Import
           </button>
           <button onClick={handleBulkExport} className="btn-outline">
@@ -250,11 +297,22 @@ export default function EmployeesPage() {
                   <td className="px-4 py-3" dangerouslySetInnerHTML={{ __html: getStatusBadge(emp.status) }} />
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => handleEditEmployee(emp.id)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="Edit">
+                      <button className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View">
+                        <i className="fas fa-eye"></i>
+                      </button>
+                      <button onClick={() => handleEditEmployee(emp.id)} className="text-[#F5A623] hover:bg-[#F5A623]/10 p-1.5 rounded-lg transition text-sm" title="Edit">
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm" title="View">
-                        <i className="fas fa-eye"></i>
+                      {/* ============================================================ */}
+                      {/* 🆕 CREATE ACCOUNT BUTTON - ADD THIS */}
+                      {/* ============================================================ */}
+                      <button 
+                        onClick={() => handleCreateAccount(emp)} 
+                        className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm" 
+                        title="Create Account"
+                        disabled={loading}
+                      >
+                        <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-user-plus'}`}></i>
                       </button>
                       <button onClick={() => handleDeleteEmployee(emp.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Delete">
                         <i className="fas fa-trash"></i>

@@ -87,33 +87,33 @@ export default function EmployeesPage() {
       });
   
       const data = await res.json();
-      console.log('API Response:', data); // Debug log
       
       if (data.success) {
-        // Show password in a popup that can be copied
-        const passwordMessage = 
-          '✅ ACCOUNT CREATED SUCCESSFULLY!\n\n' +
+        // Show the password in a clear alert
+        const msg = 
+          '✅ ACCOUNT CREATED SUCCESSFULLY!\n' +
           '═══════════════════════════════════\n' +
-          `👤 Employee: ${employee.name}\n` +
-          `📧 Email: ${employee.email}\n` +
-          `🆔 Staff ID: ${employee.staffId}\n` +
-          `🏢 Department: ${employee.department}\n` +
+          '👤 Name: ' + employee.name + '\n' +
+          '📧 Email: ' + employee.email + '\n' +
+          '🆔 Staff ID: ' + employee.staffId + '\n' +
+          '🏢 Department: ' + employee.department + '\n' +
           '═══════════════════════════════════\n' +
-          `🔑 TEMPORARY PASSWORD: ${data.tempPassword}\n` +
+          '🔑 TEMPORARY PASSWORD:\n' +
+          '  ' + data.tempPassword + '\n' +
           '═══════════════════════════════════\n\n' +
-          '📋 INSTRUCTIONS:\n' +
-          '1. Copy the password above\n' +
-          '2. Share it with the staff member\n' +
-          '3. They must change it on first login\n' +
-          '4. Password must be 8+ chars with uppercase, lowercase, number, and special character';
+          '⚠️ Share this password with the staff member.\n' +
+          'They MUST change it on first login.\n\n' +
+          'Password requirements:\n' +
+          '• Minimum 8 characters\n' +
+          '• Uppercase and lowercase letters\n' +
+          '• At least one number\n' +
+          '• At least one special character (!@#$%^&*)';
         
-        // Show the alert with the password
-        alert(passwordMessage);
+        alert(msg);
       } else {
-        alert(`❌ Failed to create account: ${data.error || 'Unknown error'}`);
+        alert('❌ Failed to create account: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error:', error);
       alert('❌ An error occurred. Please try again.');
     } finally {
       setLoading(false);

@@ -88,33 +88,38 @@ export default function EmployeesPage() {
   
       const data = await res.json();
       
+      // Log the full response to console for debugging
+      console.log('Full API Response:', data);
+      
       if (data.success) {
-        // Show the password in a clear alert
-        const msg = 
-          '✅ ACCOUNT CREATED SUCCESSFULLY!\n' +
-          '═══════════════════════════════════\n' +
-          '👤 Name: ' + employee.name + '\n' +
-          '📧 Email: ' + employee.email + '\n' +
-          '🆔 Staff ID: ' + employee.staffId + '\n' +
-          '🏢 Department: ' + employee.department + '\n' +
-          '═══════════════════════════════════\n' +
-          '🔑 TEMPORARY PASSWORD:\n' +
-          '  ' + data.tempPassword + '\n' +
-          '═══════════════════════════════════\n\n' +
-          '⚠️ Share this password with the staff member.\n' +
-          'They MUST change it on first login.\n\n' +
-          'Password requirements:\n' +
-          '• Minimum 8 characters\n' +
-          '• Uppercase and lowercase letters\n' +
-          '• At least one number\n' +
-          '• At least one special character (!@#$%^&*)';
+        // The password is in data.tempPassword
+        const password = data.tempPassword;
         
-        alert(msg);
+        // Show password in a prompt box (the password will be pre-filled and selectable)
+        const userInput = prompt(
+          '✅ ACCOUNT CREATED!\n\n' +
+          'Employee: ' + employee.name + '\n' +
+          'Email: ' + employee.email + '\n' +
+          'Staff ID: ' + employee.staffId + '\n' +
+          'Department: ' + employee.department + '\n\n' +
+          '🔑 TEMPORARY PASSWORD:\n' +
+          password + '\n\n' +
+          '📋 Select and copy the password above.\n' +
+          'Share it with the staff member.\n\n' +
+          '⚠️ They must change it on first login.',
+          password // This pre-fills the password in the input field
+        );
+        
+        // If user clicked OK, confirm
+        if (userInput !== null) {
+          alert('✅ Password copied/shared!\n\nPassword: ' + password);
+        }
       } else {
         alert('❌ Failed to create account: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
-      alert('❌ An error occurred. Please try again.');
+      console.error('Error creating account:', error);
+      alert('❌ An error occurred: ' + error.message);
     } finally {
       setLoading(false);
     }

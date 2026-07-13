@@ -38,7 +38,6 @@ export async function POST(request) {
       );
     }
 
-    // Check if user already exists
     if (users[email]) {
       return NextResponse.json(
         { error: 'Employee with this email already exists' },
@@ -46,13 +45,9 @@ export async function POST(request) {
       );
     }
 
-    // Generate staff ID if not provided
     const newStaffId = staffId || `NAC-${String(Object.keys(users).length + 1).padStart(4, '0')}`;
-    
-    // Generate temporary password
     const tempPassword = generateTempPassword();
 
-    // Create user
     users[email] = {
       password: null,
       name: name,

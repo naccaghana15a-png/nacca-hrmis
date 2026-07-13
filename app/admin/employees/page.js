@@ -72,19 +72,25 @@ export default function EmployeesPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/employees');
+      console.log('API Response status:', res.status);
+      
       if (res.ok) {
         const data = await res.json();
+        console.log('Employees from API:', data.length);
+        
         if (data && data.length > 0) {
           setEmployees(data);
         } else {
-          setEmployees(staticEmployees);
+          // If API returns empty, show a message but don't fallback to static
+          setEmployees([]);
         }
       } else {
-        setEmployees(staticEmployees);
+        console.error('API returned error:', res.status);
+        setEmployees([]);
       }
     } catch (error) {
       console.error('Error fetching employees:', error);
-      setEmployees(staticEmployees);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }

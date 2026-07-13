@@ -67,7 +67,7 @@ export default function EmployeesPage() {
   // 🔐 ACCOUNT CREATION FUNCTION - ADD THIS
   // ============================================================
   const handleCreateAccount = async (employee) => {
-    if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nDepartment: ${employee.department}`)) {
+    if (!confirm(`Create account for ${employee.name}?`)) {
       return;
     }
   
@@ -87,39 +87,34 @@ export default function EmployeesPage() {
       });
   
       const data = await res.json();
-      
-      // Log the full response to console for debugging
-      console.log('Full API Response:', data);
+      console.log('API Response:', data);
       
       if (data.success) {
-        // The password is in data.tempPassword
-        const password = data.tempPassword;
+        // Use prompt to show password (it's selectable and copyable)
+        const password = data.tempPassword || 'No password';
         
-        // Show password in a prompt box (the password will be pre-filled and selectable)
-        const userInput = prompt(
+        // This will show a prompt with the password pre-filled
+        const result = prompt(
           '✅ ACCOUNT CREATED!\n\n' +
           'Employee: ' + employee.name + '\n' +
           'Email: ' + employee.email + '\n' +
           'Staff ID: ' + employee.staffId + '\n' +
           'Department: ' + employee.department + '\n\n' +
-          '🔑 TEMPORARY PASSWORD:\n' +
-          password + '\n\n' +
-          '📋 Select and copy the password above.\n' +
-          'Share it with the staff member.\n\n' +
-          '⚠️ They must change it on first login.',
-          password // This pre-fills the password in the input field
+          '🔑 TEMPORARY PASSWORD: ' + password + '\n\n' +
+          'Copy this password and share it with the staff member.',
+          password
         );
         
-        // If user clicked OK, confirm
-        if (userInput !== null) {
-          alert('✅ Password copied/shared!\n\nPassword: ' + password);
+        // If user clicked OK, the password is ready to be copied
+        if (result !== null) {
+          alert('✅ Password ready to share!\n\nPassword: ' + password);
         }
       } else {
-        alert('❌ Failed to create account: ' + (data.error || 'Unknown error'));
+        alert('❌ Failed: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error creating account:', error);
-      alert('❌ An error occurred: ' + error.message);
+      console.error('Error:', error);
+      alert('❌ Error: ' + error.message);
     } finally {
       setLoading(false);
     }

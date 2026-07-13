@@ -17,6 +17,15 @@ export default function EmployeesPage() {
   const [importLoading, setImportLoading] = useState(false);
   const [importResults, setImportResults] = useState(null);
   const [employees, setEmployees] = useState([]);
+  const [editFormData, setEditFormData] = useState({
+    id: '',
+    staffId: '',
+    name: '',
+    email: '',
+    department: '',
+    position: '',
+    status: 'Active'
+  });
   const [addFormData, setAddFormData] = useState({
     firstName: '',
     lastName: '',
@@ -26,6 +35,7 @@ export default function EmployeesPage() {
     status: 'Active',
     joinDate: ''
   });
+  const [viewEmployee, setViewEmployee] = useState(null);
 
   // Static fallback data
   const staticEmployees = [
@@ -72,25 +82,19 @@ export default function EmployeesPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/employees');
-      console.log('API Response status:', res.status);
-      
       if (res.ok) {
         const data = await res.json();
-        console.log('Employees from API:', data.length);
-        
         if (data && data.length > 0) {
           setEmployees(data);
         } else {
-          // If API returns empty, show a message but don't fallback to static
-          setEmployees([]);
+          setEmployees(staticEmployees);
         }
       } else {
-        console.error('API returned error:', res.status);
-        setEmployees([]);
+        setEmployees(staticEmployees);
       }
     } catch (error) {
       console.error('Error fetching employees:', error);
-      setEmployees([]);
+      setEmployees(staticEmployees);
     } finally {
       setLoading(false);
     }
@@ -113,6 +117,130 @@ export default function EmployeesPage() {
     const matchesDept = selectedDepartment === '' || selectedDepartment === 'All' || emp.department === selectedDepartment;
     return matchesSearch && matchesDept;
   });
+
+  // ============================================================
+  // 👁️ VIEW EMPLOYEE
+  // ============================================================
+  const handleViewEmployee = (emp) => {
+    setViewEmployee(emp);
+  };
+
+  // ============================================================
+  // ✏️ EDIT EMPLOYEE
+  // ============================================================
+  const handleEditEmployee = (emp) => {
+    setEditFormData({
+      id: emp.id,
+      staffId: emp.staffId,
+      name: emp.name,
+      email: emp.email,
+      department: emp.department,
+      position: emp.position,
+      status: emp.status
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditFormChange = (e) => {
+    setEditFormData({
+      ...editFormData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/employees', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: editFormData.email,
+          name: editFormData.name,
+          department: editFormData.department,
+          position: editFormData.position
+        })
+      });
+  
+      const data = await res.json();
+      
+      if (data.success) {
+        setShowEditModal(false);
+        alert('✅ Employee updated successfully!');
+        await fetchEmployees();
+      } else {
+        alert('❌ Failed to update: ' + data.error);
+      }
+    } catch (error) {
+      alert('❌ Error updating employee: ' + error.message);
+    }
+  };
+
+  // ============================================================
+  // 🗑️ DELETE EMPLOYEE
+  // ============================================================
+  const handleDeleteEmployee = async (id) => {
+    if (!confirm('Are you sure you want to delete this employee?')) return;
+    
+    try {
+      // Find the employee by id to get their email
+      const employee = employees.find(emp => emp.id === id);
+      if (!employee) {
+        alert('❌ Employee not found');
+        return;
+      }
+  
+      const res = await fetch(`/api/employees?email=${encodeURIComponent(employee.email)}`, {
+        method: 'DELETE'
+      });
+  
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('🗑️ Employee deleted successfully!');
+        await fetchEmployees();
+      } else {
+        alert('❌ Failed to delete: ' + data.error);
+      }
+    } catch (error) {
+      alert('❌ Error deleting employee: ' + error.message);
+    }
+  };
+
+  // ============================================================
+  // 🔐 CREATE ACCOUNT
+  // ============================================================
+  const handleCreateAccount = async (employee) => {
+    if (!confirm(`Create account for ${employee.name}?`)) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/create-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: employee.email,
+          name: employee.name,
+          staffId: employee.staffId,
+          department: employee.department,
+          role: 'STAFF'
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const password = data.tempPassword || 'No password';
+        alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n🔑 Password: ${password}`);
+        await fetchEmployees();
+      } else {
+        alert('❌ Failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ============================================================
   // ➕ ADD EMPLOYEE
@@ -197,6 +325,7 @@ export default function EmployeesPage() {
     a.download = `employees_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+    alert(`📊 Exported ${filteredEmployees.length} employees successfully!`);
   };
 
   // ============================================================
@@ -264,40 +393,6 @@ export default function EmployeesPage() {
     win.document.write(reportHTML);
     win.document.close();
     win.print();
-  };
-
-  // ============================================================
-  // 🔐 CREATE ACCOUNT
-  // ============================================================
-  const handleCreateAccount = async (employee) => {
-    if (!confirm(`Create account for ${employee.name}?`)) return;
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/auth/create-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: employee.email,
-          name: employee.name,
-          staffId: employee.staffId,
-          department: employee.department,
-          role: 'STAFF'
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        const password = data.tempPassword || 'No password';
-        alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n🔑 Password: ${password}`);
-      } else {
-        alert('❌ Failed: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      alert('❌ Error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
   };
 
   // ============================================================
@@ -412,25 +507,6 @@ export default function EmployeesPage() {
   // ============================================================
   // 🛠️ OTHER ACTIONS
   // ============================================================
-  const handleEditEmployee = (id) => {
-    const emp = employees.find(e => e.id === id);
-    setShowEditModal(emp);
-  };
-
-  const handleSaveEdit = (e) => {
-    e.preventDefault();
-    alert('✅ Employee updated successfully!');
-    setShowEditModal(null);
-    fetchEmployees();
-  };
-
-  const handleDeleteEmployee = async (id) => {
-    if (confirm('Delete this employee?')) {
-      alert('🗑️ Employee deleted!');
-      fetchEmployees();
-    }
-  };
-
   const handleBulkDelete = () => {
     if (selectedEmployees.length === 0) { alert('Select employees to delete.'); return; }
     if (confirm(`Delete ${selectedEmployees.length} employees?`)) {
@@ -529,10 +605,18 @@ export default function EmployeesPage() {
                     <td className="px-4 py-3" dangerouslySetInnerHTML={{ __html: getStatusBadge(emp.status) }} />
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        <button className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm"><i className="fas fa-eye"></i></button>
-                        <button onClick={() => handleEditEmployee(emp.id)} className="text-[#F5A623] hover:bg-[#F5A623]/10 p-1.5 rounded-lg transition text-sm"><i className="fas fa-edit"></i></button>
-                        <button onClick={() => handleCreateAccount(emp)} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm"><i className="fas fa-user-plus"></i></button>
-                        <button onClick={() => handleDeleteEmployee(emp.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition text-sm"><i className="fas fa-trash"></i></button>
+                        <button onClick={() => handleViewEmployee(emp)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View">
+                          <i className="fas fa-eye"></i>
+                        </button>
+                        <button onClick={() => handleEditEmployee(emp)} className="text-[#F5A623] hover:bg-[#F5A623]/10 p-1.5 rounded-lg transition text-sm" title="Edit">
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button onClick={() => handleCreateAccount(emp)} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm" title="Create Account">
+                          <i className="fas fa-user-plus"></i>
+                        </button>
+                        <button onClick={() => handleDeleteEmployee(emp.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Delete">
+                          <i className="fas fa-trash"></i>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -553,7 +637,112 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {/* Add Modal */}
+      {/* ============================================================ */}
+      {/* VIEW EMPLOYEE MODAL */}
+      {/* ============================================================ */}
+      {viewEmployee && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h5 className="font-bold text-xl"><i className="fas fa-user-circle text-[#0056A3] mr-2"></i>Employee Details</h5>
+              <button onClick={() => setViewEmployee(null)} className="text-[#6b7a8a] hover:text-[#1a2a3a]">
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-[#6b7a8a]">Staff ID</p>
+                <p className="font-bold">{viewEmployee.staffId}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-[#6b7a8a]">Name</p>
+                <p className="font-bold">{viewEmployee.name}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-[#6b7a8a]">Email</p>
+                <p className="font-bold">{viewEmployee.email}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-[#6b7a8a]">Department</p>
+                <p className="font-bold">{viewEmployee.department}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-[#6b7a8a]">Position</p>
+                <p className="font-bold">{viewEmployee.position}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-[#6b7a8a]">Status</p>
+                <p className="font-bold" dangerouslySetInnerHTML={{ __html: getStatusBadge(viewEmployee.status) }} />
+              </div>
+              <div className="col-span-2 bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-[#6b7a8a]">Join Date</p>
+                <p className="font-bold">{viewEmployee.joinDate || 'N/A'}</p>
+              </div>
+            </div>
+            <div className="flex justify-end mt-4 pt-4 border-t border-[#e2e8f0]">
+              <button onClick={() => setViewEmployee(null)} className="btn-primary">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* EDIT EMPLOYEE MODAL */}
+      {/* ============================================================ */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h5 className="font-bold text-xl"><i className="fas fa-user-edit text-[#0056A3] mr-2"></i>Edit Employee</h5>
+              <button onClick={() => setShowEditModal(false)} className="text-[#6b7a8a] hover:text-[#1a2a3a]">
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSaveEdit}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-sm">Staff ID</label>
+                  <input type="text" name="staffId" className="w-full p-2 border rounded-lg mt-1 bg-gray-50" value={editFormData.staffId} readOnly />
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">Name *</label>
+                  <input type="text" name="name" className="w-full p-2 border rounded-lg mt-1" value={editFormData.name} onChange={handleEditFormChange} required />
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">Email *</label>
+                  <input type="email" name="email" className="w-full p-2 border rounded-lg mt-1" value={editFormData.email} onChange={handleEditFormChange} required />
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">Department *</label>
+                  <select name="department" className="w-full p-2 border rounded-lg mt-1" value={editFormData.department} onChange={handleEditFormChange} required>
+                    {departments.filter(d => d !== 'All').map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">Position *</label>
+                  <input type="text" name="position" className="w-full p-2 border rounded-lg mt-1" value={editFormData.position} onChange={handleEditFormChange} required />
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">Status</label>
+                  <select name="status" className="w-full p-2 border rounded-lg mt-1" value={editFormData.status} onChange={handleEditFormChange}>
+                    <option value="Active">Active</option>
+                    <option value="On Leave">On Leave</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4 mt-4 border-t border-[#e2e8f0]">
+                <button type="button" onClick={() => setShowEditModal(false)} className="btn-outline flex-1">Cancel</button>
+                <button type="submit" className="btn-primary flex-1"><i className="fas fa-save mr-2"></i>Update Employee</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* ADD EMPLOYEE MODAL */}
+      {/* ============================================================ */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -583,35 +772,9 @@ export default function EmployeesPage() {
         </div>
       )}
 
-      {/* Edit Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h5 className="font-bold text-xl"><i className="fas fa-user-edit text-[#0056A3] mr-2"></i>Edit Employee</h5>
-              <button onClick={() => setShowEditModal(null)} className="text-[#6b7a8a] hover:text-[#1a2a3a]"><i className="fas fa-times text-xl"></i></button>
-            </div>
-            <form onSubmit={handleSaveEdit}>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="font-semibold text-sm">Staff ID</label><input type="text" className="w-full p-2 border rounded-lg mt-1 bg-gray-50" value={showEditModal.staffId} readOnly /></div>
-                <div><label className="font-semibold text-sm">Name</label><input type="text" className="w-full p-2 border rounded-lg mt-1" defaultValue={showEditModal.name} /></div>
-                <div><label className="font-semibold text-sm">Email</label><input type="email" className="w-full p-2 border rounded-lg mt-1" defaultValue={showEditModal.email} /></div>
-                <div><label className="font-semibold text-sm">Department</label><select className="w-full p-2 border rounded-lg mt-1" defaultValue={showEditModal.department}>
-                  {departments.filter(d => d !== 'All').map(d => <option key={d} value={d}>{d}</option>)}
-                </select></div>
-                <div><label className="font-semibold text-sm">Position</label><input type="text" className="w-full p-2 border rounded-lg mt-1" defaultValue={showEditModal.position} /></div>
-                <div><label className="font-semibold text-sm">Status</label><select className="w-full p-2 border rounded-lg mt-1" defaultValue={showEditModal.status}><option>Active</option><option>On Leave</option><option>Inactive</option></select></div>
-              </div>
-              <div className="flex gap-3 pt-4 mt-4 border-t border-[#e2e8f0]">
-                <button type="button" onClick={() => setShowEditModal(null)} className="btn-outline flex-1">Cancel</button>
-                <button type="submit" className="btn-primary flex-1"><i className="fas fa-save mr-2"></i>Update</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Audit Log Modal */}
+      {/* ============================================================ */}
+      {/* AUDIT LOG MODAL */}
+      {/* ============================================================ */}
       {showAuditLog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -637,7 +800,9 @@ export default function EmployeesPage() {
         </div>
       )}
 
-      {/* Import Modal */}
+      {/* ============================================================ */}
+      {/* IMPORT MODAL */}
+      {/* ============================================================ */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">

@@ -1,20 +1,10 @@
 import { NextResponse } from 'next/server';
-import { users, tempPasswords } from '../../../lib/users';
+import { getAllEmployees, updateEmployee, deleteEmployee, users, tempPasswords } from '../../../lib/users';
 
 // GET all employees
 export async function GET() {
   try {
-    const employees = Object.entries(users).map(([email, user], index) => ({
-      id: index + 1,
-      staffId: user.staffId || `NAC-${String(index + 1).padStart(4, '0')}`,
-      name: user.name || 'Unknown',
-      position: user.role || 'Staff',
-      department: user.department || 'N/A',
-      email: email,
-      status: user.isFirstLogin ? 'Pending' : 'Active',
-      joinDate: user.passwordChangedAt || new Date().toISOString().split('T')[0]
-    }));
-
+    const employees = getAllEmployees();
     return NextResponse.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);
@@ -83,6 +73,77 @@ export async function POST(request) {
     console.error('Error adding employee:', error);
     return NextResponse.json(
       { error: 'Failed to add employee' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update employee
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { email, name, department, position } = body;
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
+    const result = updateEmployee(email, { name, department, position });
+
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: 'Employee updated successfully',
+        user: result.user
+      });
+    } else {
+      return NextResponse.json(
+        { error: result.error },
+        { status: 404 }
+      );
+    }
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    return NextResponse.json(
+      { error: 'Failed to update employee' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete employee
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
+    const result = deleteEmployee(email);
+
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: 'Employee deleted successfully'
+      });
+    } else {
+      return NextResponse.json(
+        { error: result.error },
+        { status: 404 }
+      );
+    }
+  } catch (error) {
+    console.error('Error deleting employee:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete employee' },
       { status: 500 }
     );
   }

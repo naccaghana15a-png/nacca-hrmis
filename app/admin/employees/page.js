@@ -87,30 +87,33 @@ export default function EmployeesPage() {
       });
   
       const data = await res.json();
+      console.log('API Response:', data); // Debug log
       
       if (data.success) {
-        // Create a more visible password display
+        // Show password in a popup that can be copied
         const passwordMessage = 
           '✅ ACCOUNT CREATED SUCCESSFULLY!\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+          '═══════════════════════════════════\n' +
           `👤 Employee: ${employee.name}\n` +
           `📧 Email: ${employee.email}\n` +
           `🆔 Staff ID: ${employee.staffId}\n` +
           `🏢 Department: ${employee.department}\n` +
-          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+          '═══════════════════════════════════\n' +
           `🔑 TEMPORARY PASSWORD: ${data.tempPassword}\n` +
-          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '⚠️ IMPORTANT INSTRUCTIONS:\n' +
-          '• Share this password with the staff member\n' +
-          '• They must change it on first login\n' +
-          '• Password must be at least 8 characters\n' +
-          '• Must include uppercase, lowercase, number, and special character';
+          '═══════════════════════════════════\n\n' +
+          '📋 INSTRUCTIONS:\n' +
+          '1. Copy the password above\n' +
+          '2. Share it with the staff member\n' +
+          '3. They must change it on first login\n' +
+          '4. Password must be 8+ chars with uppercase, lowercase, number, and special character';
         
+        // Show the alert with the password
         alert(passwordMessage);
       } else {
         alert(`❌ Failed to create account: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error:', error);
       alert('❌ An error occurred. Please try again.');
     } finally {
       setLoading(false);

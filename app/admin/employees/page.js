@@ -17,9 +17,6 @@ export default function EmployeesPage() {
   const [importLoading, setImportLoading] = useState(false);
   const [importResults, setImportResults] = useState(null);
   const [employees, setEmployees] = useState([]);
-    // ============================================================
-  // 📄 PAGINATION STATE - ADD THESE TWO LINES
-  // ============================================================
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
 
@@ -84,12 +81,9 @@ export default function EmployeesPage() {
     fetchEmployees();
   }, []);
 
-  // ============================================================
-// 🔄 RESET PAGINATION WHEN SEARCH/FILTER CHANGES - ADD THIS
-// ============================================================
-useEffect(() => {
-  setCurrentPage(1);
-}, [searchTerm, selectedDepartment]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedDepartment]);
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -131,12 +125,9 @@ useEffect(() => {
     return matchesSearch && matchesDept;
   });
 
-// ============================================================
-// 📄 PAGINATION CALCULATIONS - ADD THIS
-// ============================================================
-const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
-const startIndex = (currentPage - 1) * itemsPerPage;
-const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + itemsPerPage);
 
   // ============================================================
   // 👁️ VIEW EMPLOYEE
@@ -203,7 +194,6 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
     if (!confirm('Are you sure you want to delete this employee?')) return;
     
     try {
-      // Find the employee by id to get their email
       const employee = employees.find(emp => emp.id === id);
       if (!employee) {
         alert('❌ Employee not found');
@@ -251,7 +241,6 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
       const data = await res.json();
       
       if (data.success) {
-        // ✅ Password is sent via email - no password displayed on screen
         alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n\n📧 A temporary password has been sent to the employee's email.\n\nPlease ask them to check their email and change their password on first login.`);
         await fetchEmployees();
       } else {
@@ -291,20 +280,25 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
     setLoading(true);
   
     try {
+      const payload = {
+        email: addFormData.email.trim(),
+        name: fullName.trim(),
+        department: addFormData.department.trim(),
+        position: addFormData.position.trim(),
+        status: addFormData.status || 'Active',
+        joinDate: addFormData.joinDate || new Date().toISOString().split('T')[0]
+      };
+  
+      console.log('📤 Sending payload:', payload); // Debug log
+  
       const res = await fetch('/api/employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: addFormData.email.trim(),
-          name: fullName.trim(),
-          department: addFormData.department.trim(),
-          position: addFormData.position.trim(),
-          status: addFormData.status || 'Active',
-          joinDate: addFormData.joinDate || new Date().toISOString().split('T')[0]
-        })
+        body: JSON.stringify(payload)
       });
   
       const data = await res.json();
+      console.log('📥 Response:', data); // Debug log
       
       if (data.success) {
         alert(`✅ Employee added successfully!\n\nName: ${fullName}\nEmail: ${addFormData.email}\nStaff ID: ${data.employee.staffId}\n\nTemporary Password: ${data.tempPassword}\n\n📧 Password has been sent to the employee's email.`);
@@ -323,6 +317,7 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
         alert('❌ Failed to add employee: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
+      console.error('❌ Error:', error);
       alert('❌ Error adding employee: ' + error.message);
     } finally {
       setLoading(false);
@@ -379,7 +374,8 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
       return;
     }
 
-    const reportHTML = `
+    const win = window.open('', '_blank');
+    win.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
@@ -429,10 +425,7 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
         <div class="footer"><p>NaCCA HRMIS - Employee Report</p></div>
       </body>
       </html>
-    `;
-
-    const win = window.open('', '_blank');
-    win.document.write(reportHTML);
+    `);
     win.document.close();
     win.print();
   };
@@ -633,17 +626,31 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
             </thead>
             <tbody className="divide-y divide-[#e2e8f0]">
               {loading ? (
-                <tr><td colSpan="7" className="text-center py-8"><i className="fas fa-spinner fa-spin text-2xl text-[#0056A3]"></i><p className="text-sm text-[#6b7a8a] mt-2">Loading...</p></td></tr>
+                <tr>
+                  <td colSpan="7" className="text-center py-8">
+                    <i className="fas fa-spinner fa-spin text-2xl text-[#0056A3]"></i>
+                    <p className="text-sm text-[#6b7a8a] mt-2">Loading...</p>
+                  </td>
+                </tr>
               ) : filteredEmployees.length === 0 ? (
-                <tr><td colSpan="7" className="text-center py-8 text-[#6b7a8a]"><i className="fas fa-users text-4xl mb-3 block text-[#e2e8f0]"></i><p>No employees found</p></td></tr>
+                <tr>
+                  <td colSpan="7" className="text-center py-8 text-[#6b7a8a]">
+                    <i className="fas fa-users text-4xl mb-3 block text-[#e2e8f0]"></i>
+                    <p>No employees found</p>
+                  </td>
+                </tr>
               ) : (
-                {paginatedEmployees.map((emp) => (
+                paginatedEmployees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-[#f8fafc] transition">
-                    <td className="px-4 py-3"><input type="checkbox" className="w-4 h-4 accent-[#0056A3]" checked={selectedEmployees.includes(emp.id)} onChange={() => handleSelectEmployee(emp.id)} /></td>
+                    <td className="px-4 py-3">
+                      <input type="checkbox" className="w-4 h-4 accent-[#0056A3]" checked={selectedEmployees.includes(emp.id)} onChange={() => handleSelectEmployee(emp.id)} />
+                    </td>
                     <td className="px-4 py-3 text-sm font-mono font-semibold text-[#0056A3]">{emp.staffId}</td>
                     <td className="px-4 py-3 text-sm font-medium">{emp.name}</td>
                     <td className="px-4 py-3 text-sm">{emp.position}</td>
-                    <td className="px-4 py-3 text-sm"><span className="px-2 py-1 bg-[#f1f5f9] rounded-lg text-xs font-medium">{emp.department}</span></td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className="px-2 py-1 bg-[#f1f5f9] rounded-lg text-xs font-medium">{emp.department}</span>
+                    </td>
                     <td className="px-4 py-3" dangerouslySetInnerHTML={{ __html: getStatusBadge(emp.status) }} />
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
@@ -668,39 +675,40 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
           </table>
         </div>
         <div className="px-4 py-3 border-t border-[#e2e8f0] flex flex-wrap items-center justify-between gap-2 text-sm text-[#6b7a8a]">
-  <span>
-    Showing {filteredEmployees.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} employees
-  </span>
-  <div className="flex gap-1">
-    <button 
-      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-      disabled={currentPage === 1}
-      className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc] transition disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      Previous
-    </button>
-    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-      <button
-        key={page}
-        onClick={() => setCurrentPage(page)}
-        className={`px-3 py-1 rounded-lg transition ${
-          currentPage === page 
-            ? 'bg-[#0056A3] text-white' 
-            : 'hover:bg-[#f4f7fc]'
-        }`}
-      >
-        {page}
-      </button>
-    ))}
-    <button 
-      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-      disabled={currentPage === totalPages || totalPages === 0}
-      className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc] transition disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      Next
-    </button>
-  </div>
-</div>
+          <span>
+            Showing {filteredEmployees.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} employees
+          </span>
+          <div className="flex gap-1">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 rounded-lg transition ${
+                  currentPage === page 
+                    ? 'bg-[#0056A3] text-white' 
+                    : 'hover:bg-[#f4f7fc]'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* ============================================================ */}
       {/* VIEW EMPLOYEE MODAL */}
@@ -829,18 +837,15 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
                 <div className="col-span-2"><label className="font-semibold text-sm">Join Date</label><input type="date" name="joinDate" className="w-full p-2 border rounded-lg mt-1" value={addFormData.joinDate} onChange={handleAddFormChange} /></div>
               </div>
 
-
-        {/* ============================================================ */}
-        {/* 🔍 DEBUG SECTION - ADD THIS HERE */}
-        {/* ============================================================ */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs font-mono overflow-auto max-h-32">
-            <p className="font-semibold text-gray-700 mb-1">📋 Debug Info:</p>
-            <pre className="text-gray-600 whitespace-pre-wrap">
-              {JSON.stringify(addFormData, null, 2)}
-            </pre>
-          </div>
-        )}
+              {/* Debug Section */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs font-mono overflow-auto max-h-32">
+                  <p className="font-semibold text-gray-700 mb-1">📋 Debug Info:</p>
+                  <pre className="text-gray-600 whitespace-pre-wrap">
+                    {JSON.stringify(addFormData, null, 2)}
+                  </pre>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4 mt-4 border-t border-[#e2e8f0]">
                 <button type="button" onClick={() => setShowAddModal(false)} className="btn-outline flex-1">Cancel</button>
@@ -864,10 +869,22 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-[#f4f7fc]">
-                  <tr><th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">User</th><th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Action</th><th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Timestamp</th><th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">IP</th></tr>
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">User</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Action</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Timestamp</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">IP</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e2e8f0]">
-                  {auditLogs.map(log => <tr key={log.id} className="hover:bg-[#f8fafc]"><td className="px-4 py-2 text-sm">{log.user}</td><td className="px-4 py-2 text-sm">{log.action}</td><td className="px-4 py-2 text-sm text-[#6b7a8a]">{log.timestamp}</td><td className="px-4 py-2 text-sm font-mono text-[#6b7a8a]">{log.ip}</td></tr>)}
+                  {auditLogs.map(log => (
+                    <tr key={log.id} className="hover:bg-[#f8fafc]">
+                      <td className="px-4 py-2 text-sm">{log.user}</td>
+                      <td className="px-4 py-2 text-sm">{log.action}</td>
+                      <td className="px-4 py-2 text-sm text-[#6b7a8a]">{log.timestamp}</td>
+                      <td className="px-4 py-2 text-sm font-mono text-[#6b7a8a]">{log.ip}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -886,44 +903,92 @@ const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + item
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h5 className="font-bold text-xl"><i className="fas fa-upload text-[#0056A3] mr-2"></i>Bulk Import</h5>
-              <button onClick={() => setShowImportModal(false)} className="text-[#6b7a8a] hover:text-[#1a2a3a]"><i className="fas fa-times text-xl"></i></button>
+              <h5 className="font-bold text-xl">
+                <i className="fas fa-upload text-[#0056A3] mr-2"></i>
+                Bulk Import
+              </h5>
+              <button onClick={() => setShowImportModal(false)} className="text-[#6b7a8a] hover:text-[#1a2a3a]">
+                <i className="fas fa-times text-xl"></i>
+              </button>
             </div>
+
             <div className="mb-4 p-4 bg-blue-50 rounded-xl">
               <p className="font-semibold text-blue-800 mb-2">📋 Step 1: Download Template</p>
-              <button onClick={downloadTemplate} className="btn-primary text-sm"><i className="fas fa-download mr-2"></i>Download Template</button>
+              <button onClick={downloadTemplate} className="btn-primary text-sm">
+                <i className="fas fa-download mr-2"></i>Download Template
+              </button>
             </div>
+
             <div className="mb-4 p-4 bg-gray-50 rounded-xl">
               <p className="font-semibold text-gray-800 mb-2">📤 Step 2: Upload CSV</p>
-              <input type="file" accept=".csv" onChange={handleFileUpload} className="w-full p-2 border-2 border-dashed border-[#e2e8f0] rounded-xl cursor-pointer" />
-              {importFile && <p className="text-sm text-green-600 mt-2">✅ {importFile.name} ({importPreview.length} records)</p>}
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="w-full p-2 border-2 border-dashed border-[#e2e8f0] rounded-xl cursor-pointer"
+              />
+              {importFile && (
+                <p className="text-sm text-green-600 mt-2">
+                  ✅ File loaded: {importFile.name} ({importPreview.length} records)
+                </p>
+              )}
             </div>
+
             {importPreview.length > 0 && (
               <div className="mb-4">
-                <p className="font-semibold text-gray-800 mb-2">📊 Preview ({importPreview.length})</p>
+                <p className="font-semibold text-gray-800 mb-2">
+                  📊 Preview ({importPreview.length})
+                </p>
                 <div className="overflow-x-auto max-h-60 border rounded-xl">
                   <table className="w-full text-sm">
                     <thead className="bg-[#f4f7fc] sticky top-0">
-                      <tr>{Object.keys(importPreview[0]).map(key => <th key={key} className="px-3 py-2 text-left">{key}</th>)}</tr>
+                      <tr>
+                        {Object.keys(importPreview[0]).map(key => (
+                          <th key={key} className="px-3 py-2 text-left">{key}</th>
+                        ))}
+                      </tr>
                     </thead>
-                    <tbody>{importPreview.slice(0, 10).map((row, i) => <tr key={i}>{Object.values(row).map((v, j) => <td key={j} className="px-3 py-2">{v}</td>)}</tr>)}</tbody>
+                    <tbody>
+                      {importPreview.slice(0, 10).map((row, i) => (
+                        <tr key={i}>
+                          {Object.values(row).map((v, j) => (
+                            <td key={j} className="px-3 py-2">{v}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
                   </table>
                 </div>
               </div>
             )}
+
             {importResults && (
               <div className="mb-4 p-4 bg-gray-50 rounded-xl">
                 <p className="font-semibold text-gray-800 mb-2">📊 Results</p>
                 <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-green-100 p-3 rounded-lg"><div className="text-2xl font-bold text-green-600">{importResults.success}</div><div className="text-xs text-green-700">Success</div></div>
-                  <div className="bg-red-100 p-3 rounded-lg"><div className="text-2xl font-bold text-red-600">{importResults.failed}</div><div className="text-xs text-red-700">Failed</div></div>
-                  <div className="bg-blue-100 p-3 rounded-lg"><div className="text-2xl font-bold text-blue-600">{importResults.total}</div><div className="text-xs text-blue-700">Total</div></div>
+                  <div className="bg-green-100 p-3 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{importResults.success}</div>
+                    <div className="text-xs text-green-700">Success</div>
+                  </div>
+                  <div className="bg-red-100 p-3 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{importResults.failed}</div>
+                    <div className="text-xs text-red-700">Failed</div>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{importResults.total}</div>
+                    <div className="text-xs text-blue-700">Total</div>
+                  </div>
                 </div>
               </div>
             )}
+
             <div className="flex gap-3 pt-4 border-t border-[#e2e8f0]">
               <button onClick={() => setShowImportModal(false)} className="btn-outline flex-1">Cancel</button>
-              <button onClick={handleProcessImport} disabled={importPreview.length === 0 || importLoading} className="btn-primary flex-1 disabled:opacity-50">
+              <button
+                onClick={handleProcessImport}
+                disabled={importPreview.length === 0 || importLoading}
+                className="btn-primary flex-1 disabled:opacity-50"
+              >
                 {importLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-upload mr-2"></i>} Import {importPreview.length} Records
               </button>
             </div>

@@ -7,6 +7,7 @@ export async function GET(request) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
+    // Parse cookies
     const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
       const [key, value] = cookie.trim().split('=');
       acc[key] = value;

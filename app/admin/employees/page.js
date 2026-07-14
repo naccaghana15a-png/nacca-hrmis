@@ -221,42 +221,45 @@ export default function EmployeesPage() {
   // 🔐 CREATE ACCOUNT
   // ============================================================
   const handleCreateAccount = async (employee) => {
-    if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nStaff ID: ${employee.staffId}`)) return;
-    
-    setLoading(true);
+  if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nStaff ID: ${employee.staffId}`)) return;
   
-    try {
-      const res = await fetch('/api/auth/create-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: employee.email,
-          name: employee.name,
-          staffId: employee.staffId,
-          department: employee.department,
-          role: 'STAFF'
-        })
-      });
-  
-      const data = await res.json();
-      
-      if (data.success) {
-        alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n\n📧 A temporary password has been sent to the employee's email.\n\nPlease ask them to check their email and change their password on first login.`);
-        await fetchEmployees();
-      } else {
-        if (data.error && data.error.includes('already exists')) {
-          alert(`ℹ️ ${employee.name} already has an account.\n\nEmail: ${employee.email}\n\nThey can login with their existing password.`);
-        } else {
-          alert('❌ Failed: ' + (data.error || 'Unknown error'));
-        }
-      }
-    } catch (error) {
-      alert('❌ Error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
 
+  try {
+    const res = await fetch('/api/auth/create-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: employee.email,
+        name: employee.name,
+        staffId: employee.staffId,
+        department: employee.department,
+        role: 'STAFF'
+      })
+    });
+
+    const data = await res.json();
+    console.log('📥 Create account response:', data);
+    
+    if (data.success) {
+      // Show the password in the alert
+      const password = data.tempPassword || 'Check your email';
+      alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n🔑 Temporary Password: ${password}\n\n📧 A copy has also been sent to the employee's email.\n\nPlease share this password with the employee.`);
+      await fetchEmployees();
+    } else {
+      if (data.error && data.error.includes('already has an account')) {
+        alert(`ℹ️ ${employee.name} already has a login account.\n\nEmail: ${employee.email}\n\nThey can login with their existing password.`);
+      } else {
+        alert('❌ Failed: ' + (data.error || 'Unknown error'));
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error: ' + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
   // ============================================================
   // ➕ ADD EMPLOYEE
   // ============================================================

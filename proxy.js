@@ -7,7 +7,7 @@ const roleAccess = {
   'STAFF': ['/admin', '/admin/leave', '/admin/attendance', '/admin/training', '/admin/profile'],
 };
 
-export function middleware(request) {
+export function proxy(request) {
   const { pathname } = request.nextUrl;
   
   // Public paths

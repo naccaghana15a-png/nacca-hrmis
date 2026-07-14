@@ -4,7 +4,9 @@ import nodemailer from 'nodemailer';
 export async function GET() {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: process.env.SMTP_HOST || 'mail.nacca.gov.gh',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -21,6 +23,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       messageId: info.messageId,
+      message: 'Test email sent successfully!',
     });
   } catch (error) {
     return NextResponse.json({

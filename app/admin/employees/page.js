@@ -220,7 +220,7 @@ export default function EmployeesPage() {
   // ============================================================
   // 🔐 CREATE ACCOUNT
   // ============================================================
-  const handleCreateAccount = async (employee) => {
+ const handleCreateAccount = async (employee) => {
   if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nStaff ID: ${employee.staffId}`)) return;
   
   setLoading(true);
@@ -242,9 +242,19 @@ export default function EmployeesPage() {
     console.log('📥 Create account response:', data);
     
     if (data.success) {
-      // Show the password in the alert
-      const password = data.tempPassword || 'Check your email';
-      alert(`✅ ACCOUNT CREATED!\n\nEmployee: ${employee.name}\nEmail: ${employee.email}\n🔑 Temporary Password: ${password}\n\n📧 A copy has also been sent to the employee's email.\n\nPlease share this password with the employee.`);
+      // ✅ Always show the password in the alert
+      const password = data.tempPassword || 'No password returned';
+      alert(
+        `✅ ACCOUNT CREATED!\n\n` +
+        `Employee: ${employee.name}\n` +
+        `Email: ${employee.email}\n` +
+        `Staff ID: ${employee.staffId}\n` +
+        `Department: ${employee.department}\n\n` +
+        `🔑 TEMPORARY PASSWORD:\n` +
+        `${password}\n\n` +
+        `📋 Please copy this password and share it with the employee.\n` +
+        `They must change it on first login.`
+      );
       await fetchEmployees();
     } else {
       if (data.error && data.error.includes('already has an account')) {
@@ -260,6 +270,7 @@ export default function EmployeesPage() {
     setLoading(false);
   }
 };
+
   // ============================================================
   // ➕ ADD EMPLOYEE
   // ============================================================

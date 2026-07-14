@@ -242,19 +242,29 @@ export default function EmployeesPage() {
     console.log('📥 Create account response:', data);
     
     if (data.success) {
-      // ✅ Always show the password in the alert
       const password = data.tempPassword || 'No password returned';
-      alert(
-        `✅ ACCOUNT CREATED!\n\n` +
-        `Employee: ${employee.name}\n` +
-        `Email: ${employee.email}\n` +
-        `Staff ID: ${employee.staffId}\n` +
-        `Department: ${employee.department}\n\n` +
-        `🔑 TEMPORARY PASSWORD:\n` +
-        `${password}\n\n` +
-        `📋 Please copy this password and share it with the employee.\n` +
-        `They must change it on first login.`
-      );
+      
+      // ✅ Use prompt instead of alert - allows copying!
+      const message = 
+        '✅ ACCOUNT CREATED!\n\n' +
+        'Employee: ' + employee.name + '\n' +
+        'Email: ' + employee.email + '\n' +
+        'Staff ID: ' + employee.staffId + '\n' +
+        'Department: ' + employee.department + '\n\n' +
+        '🔑 TEMPORARY PASSWORD:\n' +
+        password + '\n\n' +
+        '📋 Select and copy the password above.\n' +
+        'Share it with the staff member.\n\n' +
+        '⚠️ They must change it on first login.';
+      
+      // Show in prompt with password pre-filled in the input field
+      const userInput = prompt(message, password);
+      
+      // If user clicked OK, confirm
+      if (userInput !== null) {
+        alert('✅ Password copied/shared!\n\nPassword: ' + password);
+      }
+      
       await fetchEmployees();
     } else {
       if (data.error && data.error.includes('already has an account')) {

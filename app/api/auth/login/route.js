@@ -51,18 +51,19 @@ async function handleLogin(email, password) {
     user.failedAttempts = 0;
     user.lastLogin = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
-    const response = NextResponse.json({
-      success: true,
-      isFirstLogin: true,
-      requiresPasswordChange: true,
-      user: {
-        email: email,
-        name: user.name,
-        role: user.role,
-        staffId: user.staffId,
-        department: user.department
-      }
-    });
+ user.isFirstLogin = false;
+
+  const response = NextResponse.json({
+    success: true,
+    isFirstLogin: false,
+    user: {
+      email: email,
+      name: user.name,
+      role: user.role,
+      staffId: user.staffId,
+      department: user.department
+    }
+  });
 
     response.cookies.set('auth_user', JSON.stringify({
       email: email,

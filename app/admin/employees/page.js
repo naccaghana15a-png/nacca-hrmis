@@ -17,6 +17,12 @@ export default function EmployeesPage() {
   const [importLoading, setImportLoading] = useState(false);
   const [importResults, setImportResults] = useState(null);
   const [employees, setEmployees] = useState([]);
+    // ============================================================
+  // 📄 PAGINATION STATE - ADD THESE TWO LINES
+  // ============================================================
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+
   const [editFormData, setEditFormData] = useState({
     id: '',
     staffId: '',
@@ -78,6 +84,13 @@ export default function EmployeesPage() {
     fetchEmployees();
   }, []);
 
+  // ============================================================
+// 🔄 RESET PAGINATION WHEN SEARCH/FILTER CHANGES - ADD THIS
+// ============================================================
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm, selectedDepartment]);
+
   const fetchEmployees = async () => {
     setLoading(true);
     try {
@@ -117,6 +130,13 @@ export default function EmployeesPage() {
     const matchesDept = selectedDepartment === '' || selectedDepartment === 'All' || emp.department === selectedDepartment;
     return matchesSearch && matchesDept;
   });
+
+// ============================================================
+// 📄 PAGINATION CALCULATIONS - ADD THIS
+// ============================================================
+const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+const startIndex = (currentPage - 1) * itemsPerPage;
+const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + itemsPerPage);
 
   // ============================================================
   // 👁️ VIEW EMPLOYEE
@@ -617,7 +637,7 @@ export default function EmployeesPage() {
               ) : filteredEmployees.length === 0 ? (
                 <tr><td colSpan="7" className="text-center py-8 text-[#6b7a8a]"><i className="fas fa-users text-4xl mb-3 block text-[#e2e8f0]"></i><p>No employees found</p></td></tr>
               ) : (
-                filteredEmployees.map((emp) => (
+                {paginatedEmployees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-[#f8fafc] transition">
                     <td className="px-4 py-3"><input type="checkbox" className="w-4 h-4 accent-[#0056A3]" checked={selectedEmployees.includes(emp.id)} onChange={() => handleSelectEmployee(emp.id)} /></td>
                     <td className="px-4 py-3 text-sm font-mono font-semibold text-[#0056A3]">{emp.staffId}</td>
@@ -648,16 +668,39 @@ export default function EmployeesPage() {
           </table>
         </div>
         <div className="px-4 py-3 border-t border-[#e2e8f0] flex flex-wrap items-center justify-between gap-2 text-sm text-[#6b7a8a]">
-          <span>Showing {filteredEmployees.length} of {employees.length}</span>
-          <div className="flex gap-1">
-            <button className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc]">Previous</button>
-            <button className="px-3 py-1 rounded-lg bg-[#0056A3] text-white">1</button>
-            <button className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc]">2</button>
-            <button className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc]">3</button>
-            <button className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc]">Next</button>
-          </div>
-        </div>
-      </div>
+  <span>
+    Showing {filteredEmployees.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} employees
+  </span>
+  <div className="flex gap-1">
+    <button 
+      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+      className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc] transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Previous
+    </button>
+    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+      <button
+        key={page}
+        onClick={() => setCurrentPage(page)}
+        className={`px-3 py-1 rounded-lg transition ${
+          currentPage === page 
+            ? 'bg-[#0056A3] text-white' 
+            : 'hover:bg-[#f4f7fc]'
+        }`}
+      >
+        {page}
+      </button>
+    ))}
+    <button 
+      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+      disabled={currentPage === totalPages || totalPages === 0}
+      className="px-3 py-1 rounded-lg hover:bg-[#f4f7fc] transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Next
+    </button>
+  </div>
+</div>
 
       {/* ============================================================ */}
       {/* VIEW EMPLOYEE MODAL */}

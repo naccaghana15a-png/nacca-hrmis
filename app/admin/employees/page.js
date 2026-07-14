@@ -265,13 +265,11 @@ export default function EmployeesPage() {
     
     const fullName = `${addFormData.firstName} ${addFormData.lastName}`.trim();
     
-    // Validate required fields
     if (!addFormData.email || !fullName || !addFormData.department || !addFormData.position) {
       alert('❌ Please fill in all required fields: Name, Email, Department, and Position.');
       return;
     }
   
-    // Validate email format
     if (!addFormData.email.includes('@') || !addFormData.email.includes('.')) {
       alert('❌ Please enter a valid email address.');
       return;
@@ -280,16 +278,28 @@ export default function EmployeesPage() {
     setLoading(true);
   
     try {
+      // Format join date correctly (YYYY-MM-DD)
+      let formattedJoinDate = addFormData.joinDate;
+      if (formattedJoinDate) {
+        // If date is in DD/MM/YYYY format, convert to YYYY-MM-DD
+        if (formattedJoinDate.includes('/')) {
+          const parts = formattedJoinDate.split('/');
+          if (parts.length === 3) {
+            formattedJoinDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+      }
+  
       const payload = {
         email: addFormData.email.trim(),
         name: fullName.trim(),
         department: addFormData.department.trim(),
         position: addFormData.position.trim(),
         status: addFormData.status || 'Active',
-        joinDate: addFormData.joinDate || new Date().toISOString().split('T')[0]
+        joinDate: formattedJoinDate || new Date().toISOString().split('T')[0]
       };
   
-      console.log('📤 Sending payload:', payload); // Debug log
+      console.log('📤 Sending payload:', payload);
   
       const res = await fetch('/api/employees', {
         method: 'POST',
@@ -298,7 +308,7 @@ export default function EmployeesPage() {
       });
   
       const data = await res.json();
-      console.log('📥 Response:', data); // Debug log
+      console.log('📥 Response:', data);
       
       if (data.success) {
         alert(`✅ Employee added successfully!\n\nName: ${fullName}\nEmail: ${addFormData.email}\nStaff ID: ${data.employee.staffId}\n\nTemporary Password: ${data.tempPassword}\n\n📧 Password has been sent to the employee's email.`);

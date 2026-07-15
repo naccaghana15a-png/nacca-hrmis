@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { users, tempPasswords } from '../../../lib/users';
+import { users, tempPasswords, getAllEmployees } from '../../../lib/users';
 
 // ============================================================
 // 🔑 GENERATE TEMPORARY PASSWORD
@@ -25,21 +25,13 @@ function generateTempPassword() {
 }
 
 // ============================================================
-// 📊 GET - Fetch all employees
+// 📊 GET - Fetch all employees (using getAllEmployees from lib)
 // ============================================================
 export async function GET() {
   try {
-    const employees = Object.entries(users).map(([email, user], index) => ({
-      id: index + 1,
-      staffId: user.staffId || `NAC-${String(index + 1).padStart(4, '0')}`,
-      name: user.name || 'Unknown',
-      position: user.role || 'Staff',
-      department: user.department || 'N/A',
-      email: email,
-      status: user.isFirstLogin ? 'Pending' : 'Active',
-      joinDate: user.passwordChangedAt || new Date().toISOString().split('T')[0]
-    }));
-
+    // ✅ Use the getAllEmployees function from lib/users.js
+    const employees = getAllEmployees();
+    console.log('📊 Employees fetched:', employees.length);
     return NextResponse.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);

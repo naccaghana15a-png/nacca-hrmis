@@ -111,11 +111,18 @@ export default function EmployeesPage() {
   // 🔧 HELPER FUNCTIONS
   // ============================================================
   const getStatusBadge = (status) => {
-    if (status === 'Active') return '<span class="badge-active"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Active</span>';
-    if (status === 'On Leave') return '<span class="badge-pending"><i class="fas fa-clock mr-1"></i>On Leave</span>';
-    if (status === 'Inactive') return '<span class="badge-inactive">Inactive</span>';
-    return '<span class="badge-pending">Pending</span>';
+  const statusMap = {
+    'Active': '<span class="badge-active"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Active</span>',
+    'On Leave': '<span class="badge-pending"><i class="fas fa-clock mr-1"></i>On Leave</span>',
+    'Inactive': '<span class="badge-inactive"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Inactive</span>',
+    'Pending': '<span class="badge-pending"><i class="fas fa-clock mr-1"></i>Pending</span>',
+    'Retired': '<span class="badge-retired"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Retired</span>',
+    'Terminated': '<span class="badge-terminated"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Terminated</span>',
+    'Suspended': '<span class="badge-suspended"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Suspended</span>',
+    'Probation': '<span class="badge-probation"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Probation</span>',
   };
+  return statusMap[status] || `<span class="badge-pending">${status}</span>`;
+};
 
   const filteredEmployees = employees.filter(emp => {
     const matchesSearch = emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

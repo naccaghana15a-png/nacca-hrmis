@@ -3,44 +3,50 @@ import nodemailer from 'nodemailer';
 
 export async function GET() {
   try {
+    // ✅ Use environment variables directly (no fallbacks that override)
+    const host = process.env.SMTP_HOST;
+    const port = parseInt(process.env.SMTP_PORT || '587');
+    const secure = process.env.SMTP_SECURE === 'true';
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+
     // Log the configuration (without exposing full password)
     console.log('📧 Testing email with:', {
-      host: process.env.SMTP_HOST || 'not set',
-      port: process.env.SMTP_PORT || 'not set',
-      user: process.env.SMTP_USER || 'not set',
-      passSet: process.env.SMTP_PASS ? '✅ Yes' : '❌ No',
+      host: host,
+      port: port,
+      user: user,
+      passSet: pass ? '✅ Yes' : '❌ No',
     });
 
     // Check if credentials exist
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    if (!user || !pass) {
       return NextResponse.json({
         success: false,
         error: 'SMTP credentials not configured. Please add SMTP_USER and SMTP_PASS to environment variables.',
+        config: {
+          host: host || 'not set',
+          user: user || 'not set',
+        }
       }, { status: 400 });
     }
 
-    // Create transporter with proper config
+    // ✅ Use Gmail service directly (more reliable)
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      service: 'gmail',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false, // Helps with some SSL issues
+        user: user,
+        pass: pass,
       },
     });
 
-    // Verify connection first
+    // Verify connection
     await transporter.verify();
     console.log('✅ SMTP connection verified successfully!');
 
     // Send test email
     const info = await transporter.sendMail({
-      from: `"NaCCA HRMIS" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_USER,
+      from: `"NaCCA HRMIS" <${user}>`,
+      to: user,
       subject: '✅ Email Test - NaCCA HRMIS',
       html: `
         <!DOCTYPE html>
@@ -63,9 +69,8 @@ export async function GET() {
             <div class="content">
               <h2>✅ Email is Working!</h2>
               <p>This is a test email from NaCCA HRMIS.</p>
-              <p><strong>SMTP Host:</strong> ${process.env.SMTP_HOST || 'smtp.gmail.com'}</p>
-              <p><strong>Port:</strong> ${process.env.SMTP_PORT || '587'}</p>
-              <p><strong>User:</strong> ${process.env.SMTP_USER}</p>
+              <p><strong>SMTP Host:</strong> Gmail (service)</p>
+              <p><strong>User:</strong> ${user}</p>
               <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
               <p>If you received this, email is configured correctly!</p>
             </div>
@@ -85,9 +90,8 @@ export async function GET() {
       messageId: info.messageId,
       message: 'Test email sent successfully! Check your inbox.',
       config: {
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT || '587',
-        user: process.env.SMTP_USER,
+        host: 'smtp.gmail.com (service)',
+        user: user,
       }
     });
   } catch (error) {
@@ -95,13 +99,11 @@ export async function GET() {
     return NextResponse.json({
       success: false,
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       suggestions: [
-        'Check if SMTP_HOST is correct (smtp.gmail.com)',
-        'Check if SMTP_USER is your full Gmail address',
-        'Check if SMTP_PASS is your App Password (16 characters, no spaces)',
-        'Make sure you have enabled 2FA and created an App Password',
-        'Check if your Gmail account has sending limits',
+        'Make sure SMTP_USER is your full Gmail address: naccaghana15a@gmail.com',
+        'Make sure SMTP_PASS is your App Password (16 characters, no spaces)',
+        'You may need to create a new App Password at: https://myaccount.google.com/apppasswords',
+        'Make sure 2-Factor Authentication is enabled on your Gmail account',
       ]
     }, { status: 500 });
   }

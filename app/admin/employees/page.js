@@ -110,12 +110,12 @@ export default function EmployeesPage() {
   // ============================================================
   // 🔧 HELPER FUNCTIONS
   // ============================================================
-  const getStatusBadge = (status) => {
+const getStatusBadge = (status) => {
   const statusMap = {
     'Active': '<span class="badge-active"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Active</span>',
-    'On Leave': '<span class="badge-pending"><i class="fas fa-clock mr-1"></i>On Leave</span>',
-    'Inactive': '<span class="badge-inactive"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Inactive</span>',
+    'On Leave': '<span class="badge-onleave"><i class="fas fa-clock mr-1"></i>On Leave</span>',
     'Pending': '<span class="badge-pending"><i class="fas fa-clock mr-1"></i>Pending</span>',
+    'Inactive': '<span class="badge-inactive"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Inactive</span>',
     'Retired': '<span class="badge-retired"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Retired</span>',
     'Terminated': '<span class="badge-terminated"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Terminated</span>',
     'Suspended': '<span class="badge-suspended"><i class="fas fa-circle mr-1" style="font-size: 6px;"></i>Suspended</span>',

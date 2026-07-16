@@ -37,10 +37,8 @@
   }
   
   /* ============================================================
-     📋 BADGE STYLES - EMPLOYMENT STATUS
+     📋 EXISTING BADGE STYLES
      ============================================================ */
-  
-  /* Existing badges */
   .badge-approved {
     @apply bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold;
   }
@@ -57,18 +55,16 @@
     @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold;
   }
   
-  /* ✅ Active Employee */
   .badge-active {
     @apply bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold;
   }
   
-  /* ⚪ Inactive Employee */
   .badge-inactive {
     @apply bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold;
   }
   
   /* ============================================================
-     🆕 NEW EMPLOYMENT STATUS BADGES
+     🆕 ADD THESE NEW EMPLOYMENT STATUS BADGES HERE
      ============================================================ */
   
   /* 🔵 Retired Employee */

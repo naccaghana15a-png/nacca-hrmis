@@ -11,10 +11,11 @@ async function sendPasswordEmail(email, name, tempPassword) {
   try {
     // Check if credentials exist
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.log('❌ SMTP credentials not configured. Password not sent via email.');
-      return { success: false, method: 'console', error: 'No SMTP config' };
+      console.log('❌ SMTP credentials not configured.');
+      return { success: false, error: 'No SMTP config' };
     }
 
+    // ✅ Use Gmail service (same as test email)
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -25,7 +26,7 @@ async function sendPasswordEmail(email, name, tempPassword) {
 
     // Verify connection
     await transporter.verify();
-    console.log('✅ SMTP connection verified');
+    console.log('✅ SMTP connection verified for:', email);
 
     const mailOptions = {
       from: `"NaCCA HRMIS" <${process.env.SMTP_USER}>`,
@@ -45,7 +46,6 @@ async function sendPasswordEmail(email, name, tempPassword) {
             .button { display: inline-block; background: #0056A3; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 10px 0; }
             .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; border-top: 1px solid #ddd; margin-top: 20px; }
             .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 6px; margin: 15px 0; }
-            ul { margin: 10px 0; padding-left: 20px; }
           </style>
         </head>
         <body>
@@ -98,42 +98,16 @@ async function sendPasswordEmail(email, name, tempPassword) {
         </body>
         </html>
       `,
-      text: `
-        Welcome to NaCCA HRMIS!
-
-        Dear ${name},
-
-        Your account has been created successfully.
-
-        🔑 Temporary Password: ${tempPassword}
-
-        ⚠️ IMPORTANT:
-        - This is a temporary password. You must change it on first login.
-        - Do not share this password with anyone.
-        - You will be prompted to change your password every 90 days.
-
-        Login URL: https://nacca-hrmis.vercel.app
-
-        Password Requirements:
-        - Minimum 8 characters
-        - At least one uppercase and one lowercase letter
-        - At least one number
-        - At least one special character (!@#$%^&*)
-
-        If you have any issues, please contact the HR Department.
-
-        Regards,
-        NaCCA HRMIS Team
-      `
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent to:', email, 'Message ID:', info.messageId);
-    return { success: true, method: 'smtp', messageId: info.messageId };
+    console.log('✅ Account creation email sent to:', email);
+    console.log('📧 Message ID:', info.messageId);
+    return { success: true, messageId: info.messageId };
     
   } catch (error) {
-    console.error('❌ Email error:', error.message);
-    return { success: false, method: 'error', error: error.message };
+    console.error('❌ Email error for', email, ':', error.message);
+    return { success: false, error: error.message };
   }
 }
 
@@ -146,7 +120,6 @@ export async function POST(request) {
     const { email, name, staffId, department, role = 'STAFF' } = body;
 
     console.log('📝 Creating account for:', email);
-    console.log('📊 User data:', { email, name, staffId, department, role });
 
     if (!email || !name || !staffId || !department) {
       return NextResponse.json(
@@ -155,7 +128,7 @@ export async function POST(request) {
       );
     }
 
-    // ✅ Check if user already has a REAL password (not null)
+    // Check if user already has a REAL password
     if (users[email] && users[email].password !== null) {
       return NextResponse.json(
         { 
@@ -166,12 +139,10 @@ export async function POST(request) {
       );
     }
 
-    // ✅ If user exists but has NO password (isFirstLogin), update them
+    // If user exists but has NO password, update them
     if (users[email] && users[email].password === null) {
-      // Generate a new temporary password
       const tempPassword = generateTempPassword();
       
-      // Update existing user
       users[email].name = name;
       users[email].role = role;
       users[email].staffId = staffId;
@@ -181,7 +152,6 @@ export async function POST(request) {
       tempPasswords[email] = tempPassword;
       
       console.log('✅ Updated existing account for:', email);
-      console.log('🔑 Temporary password:', tempPassword);
 
       // ✅ SEND EMAIL
       const emailResult = await sendPasswordEmail(email, name, tempPassword);
@@ -189,17 +159,16 @@ export async function POST(request) {
       return NextResponse.json({
         success: true,
         message: emailResult.success 
-          ? 'Account updated successfully. Password sent to email.' 
-          : 'Account updated but email failed: ' + (emailResult.error || 'Unknown error'),
+          ? 'Account updated. Password sent to email.' 
+          : 'Account updated but email failed.',
         tempPassword: tempPassword,
         user: users[email],
         emailSent: emailResult.success
       });
     }
 
-    // ✅ Create NEW account if user doesn't exist at all
+    // Create NEW account
     const result = createStaffAccount(email, name, staffId, department, role);
-    console.log('✅ Result:', result);
 
     if (result.success) {
       // ✅ SEND EMAIL
@@ -208,8 +177,8 @@ export async function POST(request) {
       return NextResponse.json({
         success: true,
         message: emailResult.success 
-          ? 'Account created successfully. Password sent to email.' 
-          : 'Account created but email failed: ' + (emailResult.error || 'Unknown error'),
+          ? 'Account created. Password sent to email.' 
+          : 'Account created but email failed.',
         tempPassword: result.tempPassword,
         user: result.user,
         emailSent: emailResult.success

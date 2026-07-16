@@ -23,15 +23,22 @@ function generateTempPassword() {
   
   return password.split('').sort(() => Math.random() - 0.5).join('');
 }
-
 // ============================================================
-// 📊 GET - Fetch all employees (using getAllEmployees from lib)
+// 📊 GET - Fetch all employees
 // ============================================================
 export async function GET() {
   try {
-    // ✅ Use the getAllEmployees function from lib/users.js
-    const employees = getAllEmployees();
-    console.log('📊 Employees fetched:', employees.length);
+    const employees = Object.entries(users).map(([email, user], index) => ({
+      id: index + 1,
+      staffId: user.staffId || `NAC-${String(index + 1).padStart(4, '0')}`,
+      name: user.name || 'Unknown',
+      position: user.role || 'Staff',
+      department: user.department || 'N/A',
+      email: email,
+      status: user.employmentStatus || 'Active',  // ← Use employmentStatus
+      joinDate: user.passwordChangedAt || new Date().toISOString().split('T')[0]
+    }));
+
     return NextResponse.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);

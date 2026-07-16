@@ -207,57 +207,61 @@ export default function LeavePage() {
   };
 
   // Handle Leave Application Submission
-  const handleSubmitLeave = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const leaveData = {
-      id: Date.now(),
-      reference: `NAC-LV-2026-${String(leaveApplications.length + 1).padStart(4, '0')}`,
-      applicant: user?.name || 'Staff Member',
-      department: user?.department || 'Unknown',
-      type: formData.get('leaveType'),
-      startDate: formData.get('startDate'),
-      endDate: formData.get('endDate'),
-      days: calculateDays(formData.get('startDate'), formData.get('endDate')),
-      reason: formData.get('reason'),
-      status: 'pending_director',
-      currentStage: 'Director Review',
-      submittedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      actions: [
-        { stage: 'Submitted', officer: user?.name || 'Staff Member', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: 'Leave application submitted' }
-      ],
-      notifications: [],
-      workflow: {
-        current: 'director_review',
-        history: [
-          { stage: 'submitted', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Staff Member' }
-        ]
-      },
-      balance: leaveBalance
-    };
-
-    // Send email notifications
-    const director = staffData.directors.find(d => d.department === leaveData.department);
-    if (director) {
-      sendEmailNotification(
-        director.email,
-        `Leave Application ${leaveData.reference} - Action Required`,
-        `Dear ${director.name},\n\nA leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.\n\nDetails:\n- Type: ${leaveData.type}\n- Dates: ${leaveData.startDate} to ${leaveData.endDate}\n- Days: ${leaveData.days}\n- Reason: ${leaveData.reason}\n\nPlease review and forward to HR.\n\nRegards,\nNaCCA HRMIS System`
-      );
-    }
-
-    // Send confirmation to applicant
-    sendEmailNotification(
-      user?.email || 'staff@nacca.gov.gh',
-      `Leave Application ${leaveData.reference} - Submitted Successfully`,
-      `Dear ${leaveData.applicant},\n\nYour leave application has been submitted and is pending approval.\n\nApplication Details:\n- Reference: ${leaveData.reference}\n- Type: ${leaveData.type}\n- Dates: ${leaveData.startDate} to ${leaveData.endDate}\n- Days: ${leaveData.days}\n\nYou will be notified when the application is reviewed.\n\nRegards,\nNaCCA HRMIS System`
-    );
-
-    setLeaveApplications([leaveData, ...leaveApplications]);
-    setShowApplyForm(false);
-    alert('✅ Leave application submitted! Notifications sent to your Director and HR.');
+ 
+// Handle Leave Application Submission
+const handleSubmitLeave = (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  const leaveData = {
+    id: Date.now(),
+    reference: `NAC-LV-2026-${String(leaveApplications.length + 1).padStart(4, '0')}`,
+    applicant: user?.name || 'Staff Member',
+    applicantId: user?.staffId || 'N/A',
+    department: user?.department || 'Unknown',
+    type: formData.get('leaveType'),
+    startDate: formData.get('startDate'),
+    endDate: formData.get('endDate'),
+    days: calculateDays(formData.get('startDate'), formData.get('endDate')),
+    reason: formData.get('reason'),
+    status: 'pending_director',  // ← This is the key!
+    currentStage: 'Director Review',
+    submittedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    actions: [
+      { 
+        stage: 'Submitted', 
+        officer: user?.name || 'Staff Member', 
+        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), 
+        comment: 'Leave application submitted' 
+      }
+    ],
+    notifications: [],
+    workflow: {
+      current: 'director_review',
+      history: [
+        { 
+          stage: 'submitted', 
+          timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), 
+          officer: user?.name || 'Staff Member' 
+        }
+      ]
+    },
+    balance: leaveBalance
   };
+
+  // ✅ Add to the beginning of the array - THIS IS THE FIX
+  setLeaveApplications(prev => [leaveData, ...prev]);
+  
+  // ✅ Show success message
+  alert(`✅ Leave application submitted!\n\nReference: ${leaveData.reference}\nType: ${leaveData.type}\nDays: ${leaveData.days}\n\nYour application is now pending Director review.`);
+  
+  // ✅ Close the modal
+  setShowApplyForm(false);
+  
+  // ✅ Switch to Director Review tab to show the application
+  setActiveTab('director');
+};
 
   const calculateDays = (start, end) => {
     const startDate = new Date(start);
@@ -477,12 +481,12 @@ export default function LeavePage() {
   const getApplicationsByStatus = (status) => {
     return leaveApplications.filter(l => l.status === status);
   };
-
-  const pendingDirector = leaveApplications.filter(l => l.status === 'pending_director' || l.status === 'director_review');
-  const pendingHR = leaveApplications.filter(l => l.status === 'hr_review');
-  const pendingDG = leaveApplications.filter(l => l.status === 'pending_dg');
-  const approved = leaveApplications.filter(l => l.status === 'approved');
-  const rejected = leaveApplications.filter(l => l.status === 'rejected');
+// Get applications by status
+const pendingDirector = leaveApplications.filter(l => l.status === 'pending_director' || l.status === 'director_review');
+const pendingHR = leaveApplications.filter(l => l.status === 'hr_review');
+const pendingDG = leaveApplications.filter(l => l.status === 'pending_dg');
+const approved = leaveApplications.filter(l => l.status === 'approved');
+const rejected = leaveApplications.filter(l => l.status === 'rejected');
 
   // Check user role for workflow actions
   const isDirector = user?.role === 'DIRECTOR' || user?.role === 'SUPER_ADMIN';

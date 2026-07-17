@@ -26,24 +26,32 @@ export default function AdminLayout({ children }) {
   }, [router]);
 
   const getNavItems = (role) => {
-    const allItems = [
-      { icon: 'fa-th-large', label: 'Dashboard', path: '/admin', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
-      { icon: 'fa-users', label: 'Employees', path: '/admin/employees', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
-      { icon: 'fa-calendar-check', label: 'Leave Management', path: '/admin/leave', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
-      { icon: 'fa-clock', label: 'Attendance', path: '/admin/attendance', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
-      { icon: 'fa-chart-line', label: 'Performance', path: '/admin/performance', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
-      { icon: 'fa-graduation-cap', label: 'Training', path: '/admin/training', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
-      { icon: 'fa-briefcase', label: 'Recruitment', path: '/admin/recruitment', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
-      { icon: 'fa-laptop', label: 'Assets', path: '/admin/assets', roles: ['SUPER_ADMIN'] },
-      { icon: 'fa-file-alt', label: 'Documents', path: '/admin/documents', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
-      { icon: 'fa-wallet', label: 'Payroll', path: '/admin/payroll', roles: ['SUPER_ADMIN'] },
-      { icon: 'fa-chart-bar', label: 'Analytics', path: '/admin/analytics', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
-      { icon: 'fa-file-pdf', label: 'Reports', path: '/admin/reports', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
-      { icon: 'fa-cog', label: 'Settings', path: '/admin/settings', roles: ['SUPER_ADMIN'] },
-    ];
+  const allItems = [
+    { icon: 'fa-th-large', label: 'Dashboard', path: '/admin', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+    { icon: 'fa-users', label: 'Employees', path: '/admin/employees', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+    { icon: 'fa-calendar-check', label: 'Leave Management', path: '/admin/leave', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+    // ✅ HIDDEN: Attendance, Recruitment, Payroll
+    // { icon: 'fa-clock', label: 'Attendance', path: '/admin/attendance', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+    // { icon: 'fa-briefcase', label: 'Recruitment', path: '/admin/recruitment', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+    // { icon: 'fa-wallet', label: 'Payroll', path: '/admin/payroll', roles: ['SUPER_ADMIN'] },
+    { icon: 'fa-chart-line', label: 'Performance', path: '/admin/performance', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+    { icon: 'fa-graduation-cap', label: 'Training', path: '/admin/training', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+    { icon: 'fa-laptop', label: 'Assets', path: '/admin/assets', roles: ['SUPER_ADMIN'] },
+    { icon: 'fa-file-alt', label: 'Documents', path: '/admin/documents', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+    { icon: 'fa-chart-bar', label: 'Analytics', path: '/admin/analytics', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+    { icon: 'fa-file-pdf', label: 'Reports', path: '/admin/reports', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+    { icon: 'fa-cog', label: 'Settings', path: '/admin/settings', roles: ['SUPER_ADMIN'] },
+    // ✅ NEW: Staff Document Management
+      // Staff Documents - visible to all
+      { icon: 'fa-folder', label: 'My Documents', path: '/admin/documents', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+    // All Documents - only HR and Super Admin
+    { icon: 'fa-folder-open', label: 'All Staff Documents', path: '/admin/documents/all', roles: ['SUPER_ADMIN', 'DIRECTOR'] },
+    // ✅ NEW: Announcements
+    { icon: 'fa-bullhorn', label: 'Announcements', path: '/admin/announcements', roles: ['SUPER_ADMIN', 'DIRECTOR', 'STAFF'] },
+  ];
 
-    return allItems.filter(item => item.roles.includes(role));
-  };
+  return allItems.filter(item => item.roles.includes(role));
+};
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });

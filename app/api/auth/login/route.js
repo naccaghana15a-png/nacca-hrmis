@@ -1,53 +1,19 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '../../../../lib/supabase';
+import { supabase, getUserByEmail, updateUser, getTempPassword, setTempPassword, deleteTempPassword } from '../../../../lib/supabase';
 import { users, tempPasswords, initDemoUsers } from '../../../../lib/users';
 
 // Initialize demo users (for fallback)
 initDemoUsers();
 
 // ============================================================
-// 📧 EMAIL FUNCTIONS (for notifications)
+// 📧 EMAIL FUNCTIONS
 // ============================================================
 function sendPasswordChangeEmail(email, name) {
-  console.log('========================================');
-  console.log('📧 PASSWORD CHANGED NOTIFICATION');
-  console.log('========================================');
-  console.log('To:', email);
-  console.log('From: noreply@nacca.gov.gh');
-  console.log('Subject: Password Changed - NaCCA HRMIS');
-  console.log('');
-  console.log('Dear', name + ',');
-  console.log('');
-  console.log('Your password has been changed successfully.');
-  console.log('');
-  console.log('If you did not make this change, please contact HR immediately.');
-  console.log('');
-  console.log('Regards,');
-  console.log('NaCCA HRMIS System');
-  console.log('========================================');
+  console.log('📧 Password changed for:', email);
 }
 
 function sendPasswordResetEmail(email, name, tempPassword) {
-  console.log('========================================');
-  console.log('📧 PASSWORD RESET');
-  console.log('========================================');
-  console.log('To:', email);
-  console.log('From: noreply@nacca.gov.gh');
-  console.log('Subject: Password Reset - NaCCA HRMIS');
-  console.log('');
-  console.log('Dear', name + ',');
-  console.log('');
-  console.log('Your password has been reset.');
-  console.log('');
-  console.log('Temporary Password:', tempPassword);
-  console.log('');
-  console.log('IMPORTANT: Please login with this temporary password and change it immediately.');
-  console.log('');
-  console.log('Login URL: https://nacca-hrmis.vercel.app');
-  console.log('');
-  console.log('Regards,');
-  console.log('NaCCA HRMIS System');
-  console.log('========================================');
+  console.log('📧 Password reset for:', email, 'Temp:', tempPassword);
 }
 
 // ============================================================
@@ -95,7 +61,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Authentication failed' },
+      { error: 'Authentication failed: ' + error.message },
       { status: 500 }
     );
   }
@@ -107,47 +73,43 @@ export async function POST(request) {
 async function handleLogin(email, password) {
   console.log('🔍 Login attempt for:', email);
 
-  // ✅ FIRST: Try to get user from Supabase
+  // ✅ FIRST: Try Supabase
   let user = null;
-  let userFromDB = null;
+  let isFromSupabase = false;
   
   try {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('email', email)
-      .single();
-    
-    if (!error && data) {
-      userFromDB = data;
+    const dbUser = await getUserByEmail(email);
+    if (dbUser) {
+      isFromSupabase = true;
+      user = {
+        password: dbUser.password,
+        name: dbUser.name,
+        role: dbUser.role,
+        staffId: dbUser.staff_id,
+        department: dbUser.department,
+        isFirstLogin: dbUser.is_first_login === 1,
+        accountLocked: dbUser.account_locked === 1,
+        failedAttempts: dbUser.failed_attempts || 0,
+        lockTime: dbUser.lock_time,
+        lastLogin: dbUser.last_login,
+        email: email
+      };
       console.log('✅ User found in Supabase:', email);
     }
   } catch (dbError) {
-    console.log('⚠️ Supabase lookup failed:', dbError.message);
+    console.log('⚠️ Supabase lookup error:', dbError.message);
   }
 
-  // ✅ SECOND: Check in-memory users as fallback
-  const memoryUser = users[email];
-  
-  // Use Supabase data if available, otherwise use memory
-  if (userFromDB) {
-    user = {
-      password: userFromDB.password,
-      name: userFromDB.name,
-      role: userFromDB.role,
-      staffId: userFromDB.staff_id,
-      department: userFromDB.department,
-      isFirstLogin: userFromDB.is_first_login === 1,
-      accountLocked: userFromDB.account_locked === 1,
-      failedAttempts: userFromDB.failed_attempts || 0,
-      lockTime: userFromDB.lock_time,
-      lastLogin: userFromDB.last_login,
-      email: email
-    };
-  } else if (memoryUser) {
-    user = memoryUser;
-    console.log('✅ Using memory user:', email);
-  } else {
+  // ✅ SECOND: Fallback to memory
+  if (!user) {
+    const memoryUser = users[email];
+    if (memoryUser) {
+      user = memoryUser;
+      console.log('✅ Using memory user:', email);
+    }
+  }
+
+  if (!user) {
     console.log('❌ User not found:', email);
     return NextResponse.json(
       { error: 'Invalid email or password' },
@@ -155,22 +117,22 @@ async function handleLogin(email, password) {
     );
   }
 
+  console.log('👤 User found:', user.name);
+  console.log('🔑 isFirstLogin:', user.isFirstLogin);
+
   // ✅ Check if account is locked
   if (user.accountLocked) {
-    const lockTime = user.lockTime || 0;
+    const lockTime = user.lockTime ? new Date(user.lockTime).getTime() : 0;
     const now = Date.now();
     const lockDuration = 30 * 60 * 1000;
 
     if (now - lockTime > lockDuration) {
-      // Auto-unlock
       user.accountLocked = false;
       user.failedAttempts = 0;
       user.lockTime = null;
-      await updateUserInSupabase(email, { 
-        account_locked: 0, 
-        failed_attempts: 0, 
-        lock_time: null 
-      });
+      if (isFromSupabase) {
+        await updateUser(email, { account_locked: 0, failed_attempts: 0, lock_time: null });
+      }
       console.log('🔓 Account auto-unlocked:', email);
     } else {
       const remainingMinutes = Math.ceil((lockDuration - (now - lockTime)) / 60000);
@@ -185,24 +147,30 @@ async function handleLogin(email, password) {
     }
   }
 
-  // ✅ Check temp password (for first-time login)
-  const tempPassword = await getTempPasswordFromDB(email);
+  // ✅ Check temp password
+  let tempPassword = null;
+  if (isFromSupabase) {
+    tempPassword = await getTempPassword(email);
+  }
+  if (!tempPassword) {
+    tempPassword = tempPasswords[email] || null;
+  }
+  
   const isTempPassword = tempPassword === password;
   const isValidPassword = user.password === password;
 
   console.log('🔍 isTempPassword:', isTempPassword);
   console.log('🔍 isValidPassword:', isValidPassword);
-  console.log('🔍 isFirstLogin:', user.isFirstLogin);
 
   // ✅ First-time login with temporary password
   if (user.isFirstLogin && isTempPassword) {
     console.log('✅ First-time login with temp password for:', email);
     user.failedAttempts = 0;
     user.lastLogin = new Date().toISOString().replace('T', ' ').slice(0, 19);
-    await updateUserInSupabase(email, { 
-      failed_attempts: 0, 
-      last_login: user.lastLogin 
-    });
+    
+    if (isFromSupabase) {
+      await updateUser(email, { failed_attempts: 0, last_login: user.lastLogin });
+    }
 
     const response = NextResponse.json({
       success: true,
@@ -243,17 +211,19 @@ async function handleLogin(email, password) {
     user.lockTime = null;
     user.lastLogin = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
-    await updateUserInSupabase(email, { 
-      failed_attempts: 0, 
-      account_locked: 0, 
-      lock_time: null,
-      last_login: user.lastLogin,
-      is_first_login: 0 
-    });
-
     if (user.isFirstLogin) {
       user.isFirstLogin = false;
       console.log('✅ isFirstLogin set to false for:', email);
+    }
+
+    if (isFromSupabase) {
+      await updateUser(email, { 
+        failed_attempts: 0, 
+        account_locked: 0, 
+        lock_time: null,
+        last_login: user.lastLogin,
+        is_first_login: 0 
+      });
     }
 
     const response = NextResponse.json({
@@ -291,17 +261,16 @@ async function handleLogin(email, password) {
   user.failedAttempts = (user.failedAttempts || 0) + 1;
   const remainingAttempts = 5 - user.failedAttempts;
 
-  await updateUserInSupabase(email, { 
-    failed_attempts: user.failedAttempts 
-  });
+  if (isFromSupabase) {
+    await updateUser(email, { failed_attempts: user.failedAttempts });
+  }
 
   if (user.failedAttempts >= 5) {
     user.accountLocked = true;
-    user.lockTime = Date.now();
-    await updateUserInSupabase(email, { 
-      account_locked: 1, 
-      lock_time: new Date().toISOString().replace('T', ' ').slice(0, 19) 
-    });
+    user.lockTime = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    if (isFromSupabase) {
+      await updateUser(email, { account_locked: 1, lock_time: user.lockTime });
+    }
     console.log('🔒 Account locked for:', email);
     return NextResponse.json(
       { 
@@ -330,18 +299,21 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
 
   // Get user from Supabase
   let user = null;
+  let isFromSupabase = false;
+  
   try {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('email', email)
-      .single();
-    
-    if (!error && data) {
-      user = data;
+    const dbUser = await getUserByEmail(email);
+    if (dbUser) {
+      isFromSupabase = true;
+      user = {
+        password: dbUser.password,
+        name: dbUser.name,
+        email: email,
+        isFirstLogin: dbUser.is_first_login === 1
+      };
     }
   } catch (dbError) {
-    console.log('⚠️ Supabase lookup failed:', dbError.message);
+    console.log('⚠️ Supabase lookup error:', dbError.message);
   }
 
   // Fallback to memory
@@ -365,7 +337,14 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
   }
 
   // Check if current password is correct
-  const tempPassword = await getTempPasswordFromDB(email);
+  let tempPassword = null;
+  if (isFromSupabase) {
+    tempPassword = await getTempPassword(email);
+  }
+  if (!tempPassword) {
+    tempPassword = tempPasswords[email] || null;
+  }
+  
   const isValidCurrent = user.password === currentPassword || tempPassword === currentPassword;
   
   if (!isValidCurrent) {
@@ -377,7 +356,7 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
   }
 
   // Validate new password
-  const validationErrors = validatePassword(newPassword, confirmPassword, currentPassword, user);
+  const validationErrors = validatePassword(newPassword, confirmPassword, currentPassword);
 
   if (validationErrors.length > 0) {
     return NextResponse.json(
@@ -386,21 +365,15 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
     );
   }
 
-  // ✅ Update password in Supabase
-  try {
-    const { error } = await supabase
-      .from('employees')
-      .update({ 
-        password: newPassword,
-        is_first_login: 0,
-        password_changed_at: new Date().toISOString().replace('T', ' ').slice(0, 19)
-      })
-      .eq('email', email);
-    
-    if (error) throw error;
+  // ✅ Update password
+  if (isFromSupabase) {
+    await updateUser(email, { 
+      password: newPassword,
+      is_first_login: 0,
+      password_changed_at: new Date().toISOString().replace('T', ' ').slice(0, 19)
+    });
+    await deleteTempPassword(email);
     console.log('✅ Password updated in Supabase for:', email);
-  } catch (dbError) {
-    console.log('⚠️ Could not update Supabase:', dbError.message);
   }
 
   // Also update memory
@@ -409,9 +382,6 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
     users[email].isFirstLogin = false;
     delete tempPasswords[email];
   }
-
-  // Delete temp password
-  await deleteTempPasswordFromDB(email);
 
   sendPasswordChangeEmail(email, user.name);
 
@@ -427,22 +397,21 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
 async function handleForgotPassword(email) {
   console.log('🔑 Forgot password for:', email);
 
-  // Check if user exists
+  // Check if user exists in Supabase
   let user = null;
+  let isFromSupabase = false;
+  
   try {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('email', email)
-      .single();
-    
-    if (!error && data) {
-      user = data;
+    const dbUser = await getUserByEmail(email);
+    if (dbUser) {
+      isFromSupabase = true;
+      user = dbUser;
     }
   } catch (dbError) {
-    console.log('⚠️ Supabase lookup failed:', dbError.message);
+    console.log('⚠️ Supabase lookup error:', dbError.message);
   }
 
+  // Fallback to memory
   if (!user && !users[email]) {
     return NextResponse.json({
       success: true,
@@ -450,28 +419,33 @@ async function handleForgotPassword(email) {
     });
   }
 
+  if (!user) {
+    user = users[email];
+  }
+
   const tempPassword = generateTempPassword();
 
-  // Save temp password to Supabase
-  await setTempPasswordInDB(email, tempPassword);
+  // Save temp password
+  if (isFromSupabase) {
+    await setTempPassword(email, tempPassword);
+    await updateUser(email, {
+      is_first_login: 1,
+      failed_attempts: 0,
+      account_locked: 0,
+      lock_time: null
+    });
+  }
 
-  // Reset user
+  // Update memory
   if (users[email]) {
+    tempPasswords[email] = tempPassword;
     users[email].isFirstLogin = true;
     users[email].failedAttempts = 0;
     users[email].accountLocked = false;
     users[email].lockTime = null;
   }
 
-  // Update Supabase
-  await updateUserInSupabase(email, {
-    is_first_login: 1,
-    failed_attempts: 0,
-    account_locked: 0,
-    lock_time: null
-  });
-
-  sendPasswordResetEmail(email, user?.name || 'Staff', tempPassword);
+  sendPasswordResetEmail(email, user.name || 'Staff', tempPassword);
 
   return NextResponse.json({
     success: true,
@@ -480,73 +454,9 @@ async function handleForgotPassword(email) {
 }
 
 // ============================================================
-// 🛠️ HELPER FUNCTIONS
+// 🛠️ VALIDATION
 // ============================================================
-
-async function getTempPasswordFromDB(email) {
-  try {
-    const { data, error } = await supabase
-      .from('temp_passwords')
-      .select('temp_password')
-      .eq('email', email)
-      .single();
-    
-    if (error) return null;
-    return data?.temp_password || null;
-  } catch (error) {
-    return null;
-  }
-}
-
-async function setTempPasswordInDB(email, tempPassword) {
-  try {
-    const { error } = await supabase
-      .from('temp_passwords')
-      .upsert({ 
-        email: email, 
-        temp_password: tempPassword,
-        created_at: new Date().toISOString().replace('T', ' ').slice(0, 19)
-      });
-    
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.log('⚠️ Could not save temp password:', error.message);
-    return false;
-  }
-}
-
-async function deleteTempPasswordFromDB(email) {
-  try {
-    const { error } = await supabase
-      .from('temp_passwords')
-      .delete()
-      .eq('email', email);
-    
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.log('⚠️ Could not delete temp password:', error.message);
-    return false;
-  }
-}
-
-async function updateUserInSupabase(email, updates) {
-  try {
-    const { error } = await supabase
-      .from('employees')
-      .update(updates)
-      .eq('email', email);
-    
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.log('⚠️ Could not update user:', error.message);
-    return false;
-  }
-}
-
-function validatePassword(newPassword, confirmPassword, currentPassword, user) {
+function validatePassword(newPassword, confirmPassword, currentPassword) {
   const errors = [];
 
   if (newPassword !== confirmPassword) {

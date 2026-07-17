@@ -7,7 +7,7 @@ export default function LeavePage() {
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [activeTab, setActiveTab] = useState('apply');
-  const [leaveApplications, setLeaveApplications] = useState([]); // ✅ ONLY ONE DEFINITION
+  const [leaveApplications, setLeaveApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // ============================================================
@@ -29,7 +29,6 @@ export default function LeavePage() {
   // 📋 LOAD LEAVE APPLICATIONS (FILTERED BY USER)
   // ============================================================
   const loadLeaveApplications = (currentUser) => {
-    // All applications data
     const allApplications = [
       {
         id: 1,
@@ -201,7 +200,6 @@ export default function LeavePage() {
   // 📧 MAILTO HELPER FUNCTIONS
   // ============================================================
   
-  // Open email client with pre-filled message
   const openEmailClient = (to, subject, body) => {
     const encodedSubject = encodeURIComponent(subject);
     const encodedBody = encodeURIComponent(body);
@@ -210,7 +208,6 @@ export default function LeavePage() {
     return true;
   };
 
-  // Get the director for a department
   const getDirectorForDepartment = (department) => {
     const director = staffData.directors.find(d => 
       d.department === department && d.status === 'Active'
@@ -218,122 +215,13 @@ export default function LeavePage() {
     return director || null;
   };
 
-  // Get HR Director
   const getHRDirector = () => {
     return staffData.directors.find(d => d.department === 'Human Resource');
   };
 
-  // Get Director-General
   const getDG = () => {
     return staffData.directors.find(d => d.role === 'Director-General');
   };
-
-  // Leave Applications with Full Workflow Tracking
-  const [leaveApplications, setLeaveApplications] = useState([
-    {
-      id: 1,
-      reference: 'NAC-LV-2026-0001',
-      applicant: 'Joachim Kwame Seyram Honu',
-      applicantId: 'S001',
-      department: 'Assessment',
-      type: 'Annual Leave',
-      startDate: '2026-07-15',
-      endDate: '2026-07-19',
-      days: 5,
-      reason: 'Family vacation',
-      status: 'pending_director',
-      currentStage: 'Director Review',
-      submittedAt: '2026-07-10 09:30:00',
-      updatedAt: '2026-07-10 09:30:00',
-      actions: [
-        { stage: 'Submitted', officer: 'Joachim Honu', timestamp: '2026-07-10 09:30:00', comment: 'Leave application submitted' },
-      ],
-      notifications: [
-        { to: 'joachim.honu@nacca.gov.gh', type: 'submission', sent: true, timestamp: '2026-07-10 09:31:00' }
-      ],
-      workflow: {
-        current: 'director_review',
-        history: [
-          { stage: 'submitted', timestamp: '2026-07-10 09:30:00', officer: 'Joachim Honu' }
-        ]
-      },
-      balance: { annual: 12, casual: 5, sick: 9 }
-    },
-    {
-      id: 2,
-      reference: 'NAC-LV-2026-0002',
-      applicant: 'Richard Teye',
-      applicantId: 'S002',
-      department: 'Assessment',
-      type: 'Sick Leave',
-      startDate: '2026-07-12',
-      endDate: '2026-07-13',
-      days: 2,
-      reason: 'Medical appointment',
-      status: 'hr_review',
-      currentStage: 'HR Review',
-      submittedAt: '2026-07-09 14:15:00',
-      updatedAt: '2026-07-10 08:45:00',
-      actions: [
-        { stage: 'Submitted', officer: 'Richard Teye', timestamp: '2026-07-09 14:15:00', comment: 'Leave application submitted' },
-        { stage: 'Director Approved', officer: 'Anita Collison', timestamp: '2026-07-10 08:30:00', comment: 'Approved - valid medical reason' },
-        { stage: 'Forwarded to HR', officer: 'Anita Collison', timestamp: '2026-07-10 08:35:00', comment: 'Forwarded for HR review' },
-      ],
-      notifications: [
-        { to: 'richard.teye@nacca.gov.gh', type: 'submission', sent: true, timestamp: '2026-07-09 14:16:00' },
-        { to: 'anita.collison@nacca.gov.gh', type: 'director_action', sent: true, timestamp: '2026-07-09 14:17:00' },
-        { to: 'elijah.intsiful@nacca.gov.gh', type: 'hr_notification', sent: true, timestamp: '2026-07-10 08:36:00' },
-      ],
-      workflow: {
-        current: 'hr_review',
-        history: [
-          { stage: 'submitted', timestamp: '2026-07-09 14:15:00', officer: 'Richard Teye' },
-          { stage: 'director_approved', timestamp: '2026-07-10 08:30:00', officer: 'Anita Collison' },
-          { stage: 'hr_review', timestamp: '2026-07-10 08:45:00', officer: 'Elijah Intsiful' }
-        ]
-      },
-      balance: { annual: 14, casual: 5, sick: 7 }
-    },
-    {
-      id: 3,
-      reference: 'NAC-LV-2026-0003',
-      applicant: 'Genevieve Mensah',
-      applicantId: 'S003',
-      department: 'Curriculum',
-      type: 'Annual Leave',
-      startDate: '2026-07-20',
-      endDate: '2026-07-24',
-      days: 5,
-      reason: 'Personal vacation',
-      status: 'approved',
-      currentStage: 'Final Approved',
-      submittedAt: '2026-07-05 10:00:00',
-      updatedAt: '2026-07-08 16:20:00',
-      actions: [
-        { stage: 'Submitted', officer: 'Genevieve Mensah', timestamp: '2026-07-05 10:00:00', comment: 'Leave application submitted' },
-        { stage: 'Director Approved', officer: 'Reginald Quartey', timestamp: '2026-07-06 09:15:00', comment: 'Approved - work schedule clear' },
-        { stage: 'HR Verified', officer: 'Elijah Intsiful', timestamp: '2026-07-07 11:30:00', comment: 'Leave balance sufficient - approved' },
-        { stage: 'DG Approved', officer: 'Prof. Samuel Ofori Bekoe', timestamp: '2026-07-08 16:20:00', comment: 'Approved' },
-      ],
-      notifications: [
-        { to: 'genevieve.mensah@nacca.gov.gh', type: 'submission', sent: true, timestamp: '2026-07-05 10:01:00' },
-        { to: 'reginald.quartey@nacca.gov.gh', type: 'director_action', sent: true, timestamp: '2026-07-05 10:02:00' },
-        { to: 'elijah.intsiful@nacca.gov.gh', type: 'hr_notification', sent: true, timestamp: '2026-07-06 09:16:00' },
-        { to: 'samuel.bekoe@nacca.gov.gh', type: 'dg_notification', sent: true, timestamp: '2026-07-07 11:31:00' },
-        { to: 'genevieve.mensah@nacca.gov.gh', type: 'final_decision', sent: true, timestamp: '2026-07-08 16:21:00' },
-      ],
-      workflow: {
-        current: 'completed',
-        history: [
-          { stage: 'submitted', timestamp: '2026-07-05 10:00:00', officer: 'Genevieve Mensah' },
-          { stage: 'director_approved', timestamp: '2026-07-06 09:15:00', officer: 'Reginald Quartey' },
-          { stage: 'hr_verified', timestamp: '2026-07-07 11:30:00', officer: 'Elijah Intsiful' },
-          { stage: 'dg_approved', timestamp: '2026-07-08 16:20:00', officer: 'Prof. Samuel Ofori Bekoe' }
-        ]
-      },
-      balance: { annual: 9, casual: 5, sick: 9 }
-    }
-  ]);
 
   // Leave Balance
   const leaveBalance = {
@@ -437,7 +325,6 @@ export default function LeavePage() {
     );
 
     if (sendNotifications) {
-      // Applicant confirmation
       openEmailClient(
         user?.email || 'staff@nacca.gov.gh',
         `Leave Application ${leaveData.reference} - Submitted Successfully`,
@@ -510,7 +397,6 @@ export default function LeavePage() {
 
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
 
-      // 📧 SEND MAILTO NOTIFICATIONS
       const hr = getHRDirector();
       if (hr) {
         if (confirm(`📧 Open email client to notify ${hr.name}?`)) {
@@ -522,7 +408,6 @@ export default function LeavePage() {
         }
       }
 
-      // Notify applicant
       if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
         openEmailClient(
           application.email || 'staff@nacca.gov.gh',
@@ -555,7 +440,6 @@ export default function LeavePage() {
 
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
 
-      // 📧 Send rejection notification
       if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
         openEmailClient(
           application.email || 'staff@nacca.gov.gh',
@@ -594,7 +478,6 @@ export default function LeavePage() {
 
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
 
-      // 📧 Notify DG
       const dg = getDG();
       if (dg) {
         if (confirm(`📧 Open email client to notify ${dg.name}?`)) {
@@ -606,7 +489,6 @@ export default function LeavePage() {
         }
       }
 
-      // Notify applicant
       if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
         openEmailClient(
           application.email || 'staff@nacca.gov.gh',
@@ -639,7 +521,6 @@ export default function LeavePage() {
 
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
 
-      // 📧 Send rejection notification
       if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
         openEmailClient(
           application.email || 'staff@nacca.gov.gh',
@@ -678,7 +559,6 @@ export default function LeavePage() {
 
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
 
-      // 📧 Send approval notification to applicant
       if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
         openEmailClient(
           application.email || 'staff@nacca.gov.gh',
@@ -711,7 +591,6 @@ export default function LeavePage() {
 
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
 
-      // 📧 Send rejection notification
       if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
         openEmailClient(
           application.email || 'staff@nacca.gov.gh',
@@ -729,6 +608,17 @@ export default function LeavePage() {
   const pendingDG = leaveApplications.filter(l => l.status === 'pending_dg');
   const approved = leaveApplications.filter(l => l.status === 'approved');
   const rejected = leaveApplications.filter(l => l.status === 'rejected');
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#e2e8f0] border-t-[#0056A3] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-[#6b7a8a]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // ============================================================
   // 🎨 RENDER

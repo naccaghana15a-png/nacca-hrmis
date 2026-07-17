@@ -22,6 +22,65 @@ export default function LeavePage() {
       .catch(() => {});
   }, []);
 
+export default function LeavePage() {
+  const [user, setUser] = useState(null);
+  const [showApplyForm, setShowApplyForm] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState(null);
+  const [activeTab, setActiveTab] = useState('apply');
+
+  // ============================================================
+  // 📊 FETCH LOGGED-IN USER
+  // ============================================================
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // ============================================================
+  // 📧 ADD THESE MAILTO HELPER FUNCTIONS HERE
+  // ============================================================
+  
+  // Open email client with pre-filled message
+  const openEmailClient = (to, subject, body) => {
+    const encodedSubject = encodeURIComponent(subject);
+    const encodedBody = encodeURIComponent(body);
+    const mailtoLink = `mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`;
+    window.location.href = mailtoLink;
+    return true;
+  };
+
+  // Get the director for a department
+  const getDirectorForDepartment = (department) => {
+    const director = staffData.directors.find(d => 
+      d.department === department && d.status === 'Active'
+    );
+    return director || null;
+  };
+
+  // Get HR Director
+  const getHRDirector = () => {
+    return staffData.directors.find(d => d.department === 'Human Resource');
+  };
+
+  // Get Director-General
+  const getDG = () => {
+    return staffData.directors.find(d => d.role === 'Director-General');
+  };
+
+  // Real NaCCA Staff Data (existing code continues here)
+  const staffData = {
+    directors: [
+      // ... existing directors
+    ],
+    // ... rest of staffData
+  };
+
   // Real NaCCA Staff Data
   const staffData = {
     directors: [
@@ -209,6 +268,7 @@ export default function LeavePage() {
   // Handle Leave Application Submission
  
 // Handle Leave Application Submission
+// Handle Leave Application Submission
 const handleSubmitLeave = (e) => {
   e.preventDefault();
   const formData = new FormData(e.target);
@@ -224,7 +284,7 @@ const handleSubmitLeave = (e) => {
     endDate: formData.get('endDate'),
     days: calculateDays(formData.get('startDate'), formData.get('endDate')),
     reason: formData.get('reason'),
-    status: 'pending_director',  // ← This is the key!
+    status: 'pending_director',
     currentStage: 'Director Review',
     submittedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
     updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
@@ -250,16 +310,140 @@ const handleSubmitLeave = (e) => {
     balance: leaveBalance
   };
 
-  // ✅ Add to the beginning of the array - THIS IS THE FIX
+  // Add to the beginning of the array
   setLeaveApplications(prev => [leaveData, ...prev]);
-  
-  // ✅ Show success message
-  alert(`✅ Leave application submitted!\n\nReference: ${leaveData.reference}\nType: ${leaveData.type}\nDays: ${leaveData.days}\n\nYour application is now pending Director review.`);
-  
-  // ✅ Close the modal
+
+  // ============================================================
+  // 📧 OPEN EMAIL CLIENTS FOR NOTIFICATIONS
+  // ============================================================
+
+  // 1. Confirmation to applicant
+  const applicantSubject = `Leave Application ${leaveData.reference} - Submitted Successfully`;
+  const applicantBody = `
+Dear ${leaveData.applicant},
+
+Your leave application has been submitted successfully.
+
+📋 APPLICATION DETAILS:
+• Reference: ${leaveData.reference}
+• Type: ${leaveData.type}
+• Dates: ${leaveData.startDate} to ${leaveData.endDate}
+• Days: ${leaveData.days}
+• Reason: ${leaveData.reason}
+
+Status: Pending Director Review
+
+You will receive further notifications as your application progresses.
+
+Regards,
+NaCCA HRMIS System
+  `;
+
+  // 2. Notification to Director
+  const director = getDirectorForDepartment(leaveData.department);
+  const directorSubject = `Leave Application ${leaveData.reference} - Action Required (Director Review)`;
+  const directorBody = `
+Dear ${director?.name || 'Director'},
+
+A leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.
+
+📋 APPLICATION DETAILS:
+• Reference: ${leaveData.reference}
+• Type: ${leaveData.type}
+• Dates: ${leaveData.startDate} to ${leaveData.endDate}
+• Days: ${leaveData.days}
+• Reason: ${leaveData.reason}
+
+🔗 Please review and take action on this application.
+
+You can review it here: https://nacca-hrmis.vercel.app/admin/leave
+
+Regards,
+NaCCA HRMIS System
+  `;
+
+  // 3. Notification to HR (Awareness)
+  const hr = getHRDirector();
+  const hrSubject = `New Leave Application - ${leaveData.reference} (Awaiting Director Approval)`;
+  const hrBody = `
+Dear ${hr?.name || 'HR Director'},
+
+A leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.
+
+📋 APPLICATION DETAILS:
+• Reference: ${leaveData.reference}
+• Type: ${leaveData.type}
+• Dates: ${leaveData.startDate} to ${leaveData.endDate}
+• Days: ${leaveData.days}
+
+Status: Awaiting Director Review
+
+You will be notified when the Director forwards it for HR review.
+
+Regards,
+NaCCA HRMIS System
+  `;
+
+  // 4. Notification to DG (Awareness)
+  const dg = getDG();
+  const dgSubject = `New Leave Application - ${leaveData.reference} (Awaiting Director Approval)`;
+  const dgBody = `
+Dear ${dg?.name || 'Director-General'},
+
+A leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.
+
+📋 APPLICATION DETAILS:
+• Reference: ${leaveData.reference}
+• Type: ${leaveData.type}
+• Dates: ${leaveData.startDate} to ${leaveData.endDate}
+• Days: ${leaveData.days}
+
+Status: Awaiting Director Review
+
+You will be notified when the application reaches your desk.
+
+Regards,
+NaCCA HRMIS System
+  `;
+
+  // ✅ Show a prompt asking which notifications to send
+  const sendNotifications = confirm(
+    `✅ Leave application submitted!\n\n` +
+    `📧 Email notifications will be sent to:\n` +
+    `• You (Staff) - Confirmation\n` +
+    `• ${director?.name || 'Your Director'} - Action Required\n` +
+    `• ${hr?.name || 'HR Director'} - Awareness\n` +
+    `• ${dg?.name || 'Director-General'} - Awareness\n\n` +
+    `Click OK to open your email client(s) and send notifications.\n` +
+    `Click Cancel to skip emails.`
+  );
+
+  if (sendNotifications) {
+    // Open email client for each notification
+    openEmailClient(user?.email || 'staff@nacca.gov.gh', applicantSubject, applicantBody);
+    
+    if (director) {
+      setTimeout(() => {
+        openEmailClient(director.email, directorSubject, directorBody);
+      }, 500);
+    }
+    
+    if (hr) {
+      setTimeout(() => {
+        openEmailClient(hr.email, hrSubject, hrBody);
+      }, 1000);
+    }
+    
+    if (dg) {
+      setTimeout(() => {
+        openEmailClient(dg.email, dgSubject, dgBody);
+      }, 1500);
+    }
+    
+    alert('📧 Email clients opened!\n\nPlease send each email to the respective recipients.');
+  }
+
   setShowApplyForm(false);
-  
-  // ✅ Switch to Director Review tab to show the application
   setActiveTab('director');
 };
 
@@ -271,75 +455,129 @@ const handleSubmitLeave = (e) => {
   };
 
   // Handle Workflow Actions
-  const handleDirectorAction = (id, action, comment = '') => {
-    const application = leaveApplications.find(l => l.id === id);
-    if (!application) return;
+const handleDirectorAction = (id, action, comment = '') => {
+  const application = leaveApplications.find(l => l.id === id);
+  if (!application) return;
 
-    if (action === 'approve') {
-      // Forward to HR
-      const updated = {
-        ...application,
-        status: 'hr_review',
-        currentStage: 'HR Review',
-        updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        actions: [
-          ...application.actions,
-          { stage: 'Director Approved', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Forwarded to HR' }
-        ],
-        workflow: {
-          ...application.workflow,
-          current: 'hr_review',
-          history: [
-            ...application.workflow.history,
-            { stage: 'director_approved', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
-          ]
-        }
-      };
-
-      // Send HR notification
-      const hrDirector = staffData.directors.find(d => d.department === 'Human Resource');
-      if (hrDirector) {
-        sendEmailNotification(
-          hrDirector.email,
-          `Leave Application ${application.reference} - HR Review Required`,
-          `Dear ${hrDirector.name},\n\nA leave application has been forwarded for HR review.\n\nEmployee: ${application.applicant}\nDepartment: ${application.department}\nType: ${application.type}\nDates: ${application.startDate} to ${application.endDate}\n\nPlease verify leave balances and forward to DG.\n\nRegards,\nNaCCA HRMIS System`
-        );
+  if (action === 'approve') {
+    const updated = {
+      ...application,
+      status: 'hr_review',
+      currentStage: 'HR Review',
+      updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      actions: [
+        ...application.actions,
+        { stage: 'Director Approved', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Forwarded to HR' }
+      ],
+      workflow: {
+        ...application.workflow,
+        current: 'hr_review',
+        history: [
+          ...application.workflow.history,
+          { stage: 'director_approved', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
+        ]
       }
+    };
 
-      setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
-      alert(`✅ Application ${application.reference} forwarded to HR.`);
+    // 📧 Send email notifications
+    const hr = getHRDirector();
+    if (hr) {
+      const subject = `Leave Application ${application.reference} - HR Review Required`;
+      const body = `
+Dear ${hr.name},
 
-    } else if (action === 'reject') {
-      const updated = {
-        ...application,
-        status: 'rejected',
-        currentStage: 'Rejected',
-        updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        actions: [
-          ...application.actions,
-          { stage: 'Rejected', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Application rejected' }
-        ],
-        workflow: {
-          ...application.workflow,
-          current: 'completed',
-          history: [
-            ...application.workflow.history,
-            { stage: 'rejected', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
-          ]
-        }
-      };
+The leave application from ${application.applicant} has been forwarded for HR review.
 
-      // Send rejection notification
-      sendEmailNotification(
-        application.email || 'staff@nacca.gov.gh',
-        `Leave Application ${application.reference} - Update`,
-        `Dear ${application.applicant},\n\nYour leave application has been reviewed.\n\nStatus: Rejected\nReason: ${comment || 'Please contact HR for more details.'}\n\nRegards,\nNaCCA HRMIS System`
-      );
+📋 APPLICATION DETAILS:
+• Reference: ${application.reference}
+• Type: ${application.type}
+• Dates: ${application.startDate} to ${application.endDate}
+• Days: ${application.days}
+• Director: ${user?.name || 'Director'}
 
-      setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
-      alert(`❌ Application ${application.reference} rejected.`);
+🔗 Please verify leave balances and forward to DG.
+
+Regards,
+NaCCA HRMIS System
+      `;
+      
+      if (confirm(`📧 Open email client to notify ${hr.name}?`)) {
+        openEmailClient(hr.email, subject, body);
+      }
     }
-  };
+
+    // 📧 Notify applicant
+    const applicantSubject = `Leave Application ${application.reference} - Status Update`;
+    const applicantBody = `
+Dear ${application.applicant},
+
+Your leave application has been approved by your Director.
+
+📋 APPLICATION DETAILS:
+• Reference: ${application.reference}
+• Type: ${application.type}
+• Dates: ${application.startDate} to ${application.endDate}
+
+Status: Forwarded to HR for verification.
+
+Regards,
+NaCCA HRMIS System
+    `;
+    
+    if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+      openEmailClient(application.email || 'staff@nacca.gov.gh', applicantSubject, applicantBody);
+    }
+
+    setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+    alert(`✅ Application ${application.reference} forwarded to HR.`);
+
+  } else if (action === 'reject') {
+    const updated = {
+      ...application,
+      status: 'rejected',
+      currentStage: 'Rejected',
+      updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      actions: [
+        ...application.actions,
+        { stage: 'Rejected', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Application rejected' }
+      ],
+      workflow: {
+        ...application.workflow,
+        current: 'completed',
+        history: [
+          ...application.workflow.history,
+          { stage: 'rejected', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
+        ]
+      }
+    };
+
+    // 📧 Notify applicant of rejection
+    const subject = `Leave Application ${application.reference} - Update`;
+    const body = `
+Dear ${application.applicant},
+
+Your leave application has been reviewed.
+
+📋 APPLICATION DETAILS:
+• Reference: ${application.reference}
+• Type: ${application.type}
+• Dates: ${application.startDate} to ${application.endDate}
+
+Status: ❌ Rejected
+Reason: ${comment || 'Please contact HR for more details.'}
+
+Regards,
+NaCCA HRMIS System
+    `;
+    
+    if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+      openEmailClient(application.email || 'staff@nacca.gov.gh', subject, body);
+    }
+
+    setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+    alert(`❌ Application ${application.reference} rejected.`);
+  }
+};
 
   const handleHRAction = (id, action, comment = '') => {
     const application = leaveApplications.find(l => l.id === id);

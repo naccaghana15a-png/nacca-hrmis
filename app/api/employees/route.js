@@ -31,9 +31,10 @@ function generateTempPassword() {
 export async function GET() {
   try {
     let employees = [];
+    let dbWorking = false;
     
+    // Try to get from database
     try {
-      // Try to get from database
       const stmt = db.prepare('SELECT * FROM employees');
       const dbEmployees = stmt.all();
       
@@ -48,15 +49,19 @@ export async function GET() {
           status: emp.isFirstLogin ? 'Pending' : 'Active',
           joinDate: emp.passwordChangedAt || new Date().toISOString().split('T')[0]
         }));
+        dbWorking = true;
         console.log('📊 Employees from database:', employees.length);
-      } else {
-        // Fallback to users object
-        employees = getAllEmployees();
-        console.log('📊 Employees from memory:', employees.length);
       }
     } catch (dbError) {
       console.log('Database error, using memory:', dbError.message);
-      employees = getAllEmployees();
+    }
+
+    // If database is empty or failed, use memory
+    if (employees.length === 0) {
+      const memoryEmployees = getAllEmployees();
+      // Filter out SUPER_ADMIN
+      employees = memoryEmployees.filter(emp => emp.role !== 'SUPER_ADMIN');
+      console.log('📊 Employees from memory:', employees.length);
     }
 
     return NextResponse.json(employees);
@@ -64,8 +69,9 @@ export async function GET() {
     console.error('Error fetching employees:', error);
     // Ultimate fallback
     try {
-      const employees = getAllEmployees();
-      return NextResponse.json(employees);
+      const memoryEmployees = getAllEmployees();
+      const filtered = memoryEmployees.filter(emp => emp.role !== 'SUPER_ADMIN');
+      return NextResponse.json(filtered);
     } catch (fallbackError) {
       return NextResponse.json(
         { error: 'Failed to fetch employees' },
@@ -85,7 +91,6 @@ export async function POST(request) {
 
     const { email, name, department, position, status, joinDate } = body;
 
-    // Validate required fields
     const errors = [];
     if (!email) errors.push('Email is required');
     if (!name) errors.push('Name is required');
@@ -99,7 +104,6 @@ export async function POST(request) {
       );
     }
 
-    // Validate email format
     if (!email.includes('@') || !email.includes('.')) {
       return NextResponse.json(
         { error: 'Invalid email format' },
@@ -107,7 +111,6 @@ export async function POST(request) {
       );
     }
 
-    // Check if user already exists
     if (users[email]) {
       return NextResponse.json(
         { error: 'Employee with this email already exists' },
@@ -115,7 +118,6 @@ export async function POST(request) {
       );
     }
 
-    // Generate staff ID
     const newStaffId = `NAC-${String(Object.keys(users).length + 1).padStart(4, '0')}`;
     const tempPassword = generateTempPassword();
 
@@ -138,7 +140,7 @@ export async function POST(request) {
 
     tempPasswords[email] = tempPassword;
 
-    // ✅ Save to database (with error handling)
+    // Try to save to database
     try {
       const stmt = db.prepare(`
         INSERT OR REPLACE INTO employees (
@@ -166,10 +168,7 @@ export async function POST(request) {
       console.log('✅ Employee saved to database:', email);
     } catch (dbError) {
       console.log('⚠️ Could not save to database:', dbError.message);
-      // Continue anyway - user is in memory
     }
-
-    console.log('✅ Employee added:', { email, name, newStaffId });
 
     return NextResponse.json({
       success: true,
@@ -222,7 +221,7 @@ export async function PUT(request) {
     if (department) users[email].department = department;
     if (position) users[email].role = position;
 
-    // ✅ Update in database
+    // Try to update in database
     try {
       let updateQuery = 'UPDATE employees SET ';
       const params = [];
@@ -245,8 +244,8 @@ export async function PUT(request) {
       params.push(email);
       
       const stmt = db.prepare(updateQuery);
-      const result = stmt.run(...params);
-      console.log('✅ Employee updated in database:', email, 'Changes:', result.changes);
+      stmt.run(...params);
+      console.log('✅ Employee updated in database:', email);
     } catch (dbError) {
       console.log('⚠️ Could not update database:', dbError.message);
     }
@@ -288,15 +287,13 @@ export async function DELETE(request) {
       );
     }
 
-    // Delete from memory
     delete users[email];
     delete tempPasswords[email];
 
-    // ✅ Delete from database
     try {
       const stmt = db.prepare('DELETE FROM employees WHERE email = ?');
-      const result = stmt.run(email);
-      console.log('✅ Employee deleted from database:', email, 'Rows affected:', result.changes);
+      stmt.run(email);
+      console.log('✅ Employee deleted from database:', email);
     } catch (dbError) {
       console.log('⚠️ Could not delete from database:', dbError.message);
     }

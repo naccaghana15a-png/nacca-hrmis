@@ -14,7 +14,7 @@ export async function GET() {
       message: 'Database is working!',
       test: test,
       employeeCount: count.count,
-      dbPath: 'nacca_hrmis.db'
+      dbPath: 'data/nacca_hrmis.db (or in-memory)'
     });
   } catch (error) {
     return NextResponse.json({

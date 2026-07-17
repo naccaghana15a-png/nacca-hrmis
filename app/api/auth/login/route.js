@@ -11,17 +11,14 @@ export async function POST(request) {
 
     console.log('📝 Login attempt:', { email, action });
 
-    // Handle Forgot Password
     if (action === 'reset_password') {
       return await handleForgotPassword(email);
     }
 
-    // Handle Password Change (First Login)
     if (action === 'change_password') {
       return await handlePasswordChange(email, password, newPassword, confirmPassword);
     }
 
-    // Regular Login
     return await handleLogin(email, password);
   } catch (error) {
     console.error('Login error:', error);
@@ -34,9 +31,7 @@ export async function POST(request) {
 
 async function handleLogin(email, password) {
   console.log('🔍 Login attempt for:', email);
-  console.log('🔑 Password provided:', password);
 
-  // ✅ Get user from imported users object (not hardcoded)
   const user = users[email];
 
   if (!user) {
@@ -48,18 +43,34 @@ async function handleLogin(email, password) {
   }
 
   console.log('👤 User found:', user.name);
-  console.log('🔑 Temp password for email:', tempPasswords[email]);
-  console.log('🔑 User password:', user.password);
   console.log('🔑 isFirstLogin:', user.isFirstLogin);
+  console.log('🔒 accountLocked:', user.accountLocked);
 
+  // ✅ CHECK IF ACCOUNT IS LOCKED
   if (user.accountLocked) {
-    return NextResponse.json(
-      { error: 'Account is locked. Please contact HR or System Administrator.' },
-      { status: 403 }
-    );
+    const lockTime = user.lockTime || 0;
+    const now = Date.now();
+    const lockDuration = 30 * 60 * 1000; // 30 minutes
+
+    // Auto-unlock after 30 minutes
+    if (now - lockTime > lockDuration) {
+      user.accountLocked = false;
+      user.failedAttempts = 0;
+      user.lockTime = null;
+      console.log('🔓 Account auto-unlocked for:', email);
+    } else {
+      const remainingMinutes = Math.ceil((lockDuration - (now - lockTime)) / 60000);
+      return NextResponse.json(
+        { 
+          error: `Account is locked. Please try again in ${remainingMinutes} minute(s) or contact HR.`,
+          locked: true,
+          remainingMinutes: remainingMinutes
+        },
+        { status: 403 }
+      );
+    }
   }
 
-  // ✅ Check temporary password first (for first-time login)
   const isTempPassword = tempPasswords[email] === password;
   const isValidPassword = user.password === password;
 
@@ -107,6 +118,8 @@ async function handleLogin(email, password) {
   if (isValidPassword) {
     console.log('✅ Regular login for:', email);
     user.failedAttempts = 0;
+    user.accountLocked = false;
+    user.lockTime = null;
     user.lastLogin = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
     if (user.isFirstLogin) {
@@ -144,20 +157,30 @@ async function handleLogin(email, password) {
     return response;
   }
 
-  // ❌ Invalid password
+  // ❌ Invalid password - increment attempts
   console.log('❌ Invalid password for:', email);
   user.failedAttempts = (user.failedAttempts || 0) + 1;
+  const remainingAttempts = 5 - user.failedAttempts;
 
   if (user.failedAttempts >= 5) {
     user.accountLocked = true;
+    user.lockTime = Date.now();
+    console.log('🔒 Account locked for:', email);
     return NextResponse.json(
-      { error: 'Account locked due to multiple failed attempts. Please contact HR.' },
+      { 
+        error: 'Account locked due to 5 failed login attempts. Please contact HR or wait 30 minutes.',
+        locked: true,
+        remainingAttempts: 0
+      },
       { status: 403 }
     );
   }
 
   return NextResponse.json(
-    { error: 'Invalid email or password.' },
+    { 
+      error: `Invalid email or password. ${remainingAttempts} attempt(s) remaining.`,
+      remainingAttempts: remainingAttempts
+    },
     { status: 401 }
   );
 }
@@ -173,7 +196,6 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
   }
 
   console.log('🔑 Password change for:', email);
-  console.log('🔑 Current password provided:', currentPassword);
   console.log('🔑 Temp password:', tempPasswords[email]);
 
   const isValidCurrent = user.password === currentPassword || tempPasswords[email] === currentPassword;
@@ -199,6 +221,9 @@ async function handlePasswordChange(email, currentPassword, newPassword, confirm
   if (result.success) {
     user.password = newPassword;
     user.isFirstLogin = false;
+    user.failedAttempts = 0;
+    user.accountLocked = false;
+    user.lockTime = null;
     delete tempPasswords[email];
 
     console.log('✅ Password changed successfully for:', email);
@@ -227,6 +252,11 @@ async function handleForgotPassword(email) {
       message: 'If the email exists in our system, a password reset link has been sent.'
     });
   }
+
+  // Reset failed attempts when resetting password
+  user.failedAttempts = 0;
+  user.accountLocked = false;
+  user.lockTime = null;
 
   const result = resetPassword(email);
 

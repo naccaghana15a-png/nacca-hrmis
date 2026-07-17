@@ -253,8 +253,8 @@ const handleCreateAccount = async (employee) => {
       
       // ✅ Build the email content
       const subject = encodeURIComponent('Welcome to NaCCA HRMIS - Your Account Credentials');
-      const body = encodeURIComponent(`
-Dear ${employee.name},
+      const body = encodeURIComponent(
+`Dear ${employee.name},
 
 Welcome to NaCCA HRMIS!
 
@@ -306,9 +306,12 @@ NaCCA HRMIS Team
       );
 
       if (userChoice) {
-        // ✅ Open mailto link in a new window/tab
-        window.open(mailtoLink, '_blank');
-        alert('✅ Email client opened!\n\nPlease click Send to send the password to the employee.');
+        // ✅ FIX: Use window.location.href instead of window.open
+        window.location.href = mailtoLink;
+        // ✅ Show a message to guide the user
+        setTimeout(() => {
+          alert('📧 Email client should open!\n\nIf it doesn\'t, please manually send the password to the employee.');
+        }, 500);
       } else {
         // ✅ Copy password to clipboard
         try {

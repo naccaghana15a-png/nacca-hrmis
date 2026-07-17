@@ -7,7 +7,7 @@ export default function LeavePage() {
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [activeTab, setActiveTab] = useState('apply');
-  const [leaveApplications, setLeaveApplications] = useState([]);
+  const [leaveApplications, setLeaveApplications] = useState([]); // ✅ ONLY ONE DEFINITION
   const [loading, setLoading] = useState(true);
 
   // ============================================================
@@ -160,10 +160,8 @@ export default function LeavePage() {
     
     let filteredApplications;
     if (isAdmin) {
-      // Admin sees all applications (for management)
       filteredApplications = allApplications;
     } else {
-      // Staff only sees their own applications
       filteredApplications = allApplications.filter(app => 
         app.email === currentUser?.email || 
         app.applicantId === currentUser?.staffId ||

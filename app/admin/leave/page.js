@@ -9,26 +9,6 @@ export default function LeavePage() {
   const [activeTab, setActiveTab] = useState('apply');
 
   // ============================================================
-  // 📊 FETCH LOGGED-IN USER - ADDED THIS
-  // ============================================================
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.authenticated) {
-          setUser(data.user);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-export default function LeavePage() {
-  const [user, setUser] = useState(null);
-  const [showApplyForm, setShowApplyForm] = useState(false);
-  const [selectedLeave, setSelectedLeave] = useState(null);
-  const [activeTab, setActiveTab] = useState('apply');
-
-  // ============================================================
   // 📊 FETCH LOGGED-IN USER
   // ============================================================
   useEffect(() => {
@@ -42,8 +22,32 @@ export default function LeavePage() {
       .catch(() => {});
   }, []);
 
+  // Real NaCCA Staff Data
+  const staffData = {
+    directors: [
+      { id: 'D001', name: 'Prof. Samuel Ofori Bekoe', role: 'Director-General', department: 'Executive', email: 'samuel.bekoe@nacca.gov.gh', status: 'Active' },
+      { id: 'D002', name: 'Dr. J. R. Achoanya Ayam', role: 'Deputy Director-General', department: 'Executive', email: 'j.achoanya@nacca.gov.gh', status: 'Active' },
+      { id: 'D003', name: 'Dr. Eric Amoah', role: 'Deputy Director-General', department: 'Executive', email: 'eric.amoah@nacca.gov.gh', status: 'Active' },
+      { id: 'D004', name: 'Anita Frances Cordeiro Collison', role: 'Director, SAQA', department: 'Assessment', email: 'anita.collison@nacca.gov.gh', status: 'Active' },
+      { id: 'D005', name: 'Reginald George Quartey', role: 'Director, Curriculum Development', department: 'Curriculum', email: 'reginald.quartey@nacca.gov.gh', status: 'Active' },
+      { id: 'D006', name: 'Dr. Mercy Nyamekye', role: 'Director, RPME', department: 'Research', email: 'mercy.nyamekye@nacca.gov.gh', status: 'Active' },
+      { id: 'D007', name: 'Joana Vanderpuje', role: 'Director, Instructional Resources', department: 'Instructional Resources', email: 'joana.vanderpuje@nacca.gov.gh', status: 'Active' },
+      { id: 'D008', name: 'Elijah Intsiful', role: 'Director, Human Resources & Admin', department: 'Human Resource', email: 'elijah.intsiful@nacca.gov.gh', status: 'Active' },
+      { id: 'D009', name: 'Rebecca Abu Gariba', role: 'Director, Corporate Affairs', department: 'Corporate Affairs', email: 'rebecca.gariba@nacca.gov.gh', status: 'Active' },
+    ],
+    staff: [
+      { id: 'S001', name: 'Joachim Kwame Seyram Honu', department: 'Assessment', email: 'joachim.honu@nacca.gov.gh', director: 'D004' },
+      { id: 'S002', name: 'Richard Teye', department: 'Assessment', email: 'richard.teye@nacca.gov.gh', director: 'D004' },
+      { id: 'S003', name: 'Genevieve Mensah', department: 'Curriculum', email: 'genevieve.mensah@nacca.gov.gh', director: 'D005' },
+      { id: 'S004', name: 'Thomas Kumah Osei', department: 'Curriculum', email: 'thomas.osei@nacca.gov.gh', director: 'D005' },
+      { id: 'S005', name: 'Abigail Owusu Birago', department: 'Research', email: 'abigail.birago@nacca.gov.gh', director: 'D006' },
+      { id: 'S006', name: 'Kenneth Wontumi', department: 'Instructional Resources', email: 'kenneth.wontumi@nacca.gov.gh', director: 'D007' },
+      { id: 'S007', name: 'Seth Nii Nartey', department: 'Corporate Affairs', email: 'seth.nartey@nacca.gov.gh', director: 'D009' },
+    ]
+  };
+
   // ============================================================
-  // 📧 ADD THESE MAILTO HELPER FUNCTIONS HERE
+  // 📧 MAILTO HELPER FUNCTIONS
   // ============================================================
   
   // Open email client with pre-filled message
@@ -71,38 +75,6 @@ export default function LeavePage() {
   // Get Director-General
   const getDG = () => {
     return staffData.directors.find(d => d.role === 'Director-General');
-  };
-
-  // Real NaCCA Staff Data (existing code continues here)
-  const staffData = {
-    directors: [
-      // ... existing directors
-    ],
-    // ... rest of staffData
-  };
-
-  // Real NaCCA Staff Data
-  const staffData = {
-    directors: [
-      { id: 'D001', name: 'Prof. Samuel Ofori Bekoe', role: 'Director-General', department: 'Executive', email: 'samuel.bekoe@nacca.gov.gh' },
-      { id: 'D002', name: 'Dr. J. R. Achoanya Ayam', role: 'Deputy Director-General', department: 'Executive', email: 'j.achoanya@nacca.gov.gh' },
-      { id: 'D003', name: 'Dr. Eric Amoah', role: 'Deputy Director-General', department: 'Executive', email: 'eric.amoah@nacca.gov.gh' },
-      { id: 'D004', name: 'Anita Frances Cordeiro Collison', role: 'Director, SAQA', department: 'Assessment', email: 'anita.collison@nacca.gov.gh' },
-      { id: 'D005', name: 'Reginald George Quartey', role: 'Director, Curriculum Development', department: 'Curriculum', email: 'reginald.quartey@nacca.gov.gh' },
-      { id: 'D006', name: 'Dr. Mercy Nyamekye', role: 'Director, RPME', department: 'Research', email: 'mercy.nyamekye@nacca.gov.gh' },
-      { id: 'D007', name: 'Joana Vanderpuje', role: 'Director, Instructional Resources', department: 'Instructional Resources', email: 'joana.vanderpuje@nacca.gov.gh' },
-      { id: 'D008', name: 'Elijah Intsiful', role: 'Director, Human Resources & Admin', department: 'Human Resource', email: 'elijah.intsiful@nacca.gov.gh' },
-      { id: 'D009', name: 'Rebecca Abu Gariba', role: 'Director, Corporate Affairs', department: 'Corporate Affairs', email: 'rebecca.gariba@nacca.gov.gh' },
-    ],
-    staff: [
-      { id: 'S001', name: 'Joachim Kwame Seyram Honu', department: 'Assessment', email: 'joachim.honu@nacca.gov.gh', director: 'D004' },
-      { id: 'S002', name: 'Richard Teye', department: 'Assessment', email: 'richard.teye@nacca.gov.gh', director: 'D004' },
-      { id: 'S003', name: 'Genevieve Mensah', department: 'Curriculum', email: 'genevieve.mensah@nacca.gov.gh', director: 'D005' },
-      { id: 'S004', name: 'Thomas Kumah Osei', department: 'Curriculum', email: 'thomas.osei@nacca.gov.gh', director: 'D005' },
-      { id: 'S005', name: 'Abigail Owusu Birago', department: 'Research', email: 'abigail.birago@nacca.gov.gh', director: 'D006' },
-      { id: 'S006', name: 'Kenneth Wontumi', department: 'Instructional Resources', email: 'kenneth.wontumi@nacca.gov.gh', director: 'D007' },
-      { id: 'S007', name: 'Seth Nii Nartey', department: 'Corporate Affairs', email: 'seth.nartey@nacca.gov.gh', director: 'D009' },
-    ]
   };
 
   // Leave Applications with Full Workflow Tracking
@@ -231,19 +203,6 @@ export default function LeavePage() {
     { key: 'completed', label: 'Final Decision', icon: 'fa-check-circle', color: 'text-green-500' }
   ];
 
-  const getWorkflowStatus = (status) => {
-    const map = {
-      'pending_director': 'Director Review',
-      'pending_hr': 'HR Review',
-      'pending_dg': 'DG Review',
-      'approved': 'Approved',
-      'rejected': 'Rejected',
-      'hr_review': 'HR Review',
-      'director_review': 'Director Review'
-    };
-    return map[status] || status;
-  };
-
   const getStatusBadge = (status) => {
     const map = {
       'pending_director': '<span class="badge-review"><i class="fas fa-clock mr-1"></i>Director Review</span>',
@@ -257,196 +216,6 @@ export default function LeavePage() {
     return map[status] || `<span class="badge-pending">${status}</span>`;
   };
 
-  // Email notification simulation
-  const sendEmailNotification = (to, subject, body) => {
-    console.log(`📧 Email sent to: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${body}`);
-    return true;
-  };
-
-  // Handle Leave Application Submission
- 
-// Handle Leave Application Submission
-// Handle Leave Application Submission
-const handleSubmitLeave = (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  
-  const leaveData = {
-    id: Date.now(),
-    reference: `NAC-LV-2026-${String(leaveApplications.length + 1).padStart(4, '0')}`,
-    applicant: user?.name || 'Staff Member',
-    applicantId: user?.staffId || 'N/A',
-    department: user?.department || 'Unknown',
-    type: formData.get('leaveType'),
-    startDate: formData.get('startDate'),
-    endDate: formData.get('endDate'),
-    days: calculateDays(formData.get('startDate'), formData.get('endDate')),
-    reason: formData.get('reason'),
-    status: 'pending_director',
-    currentStage: 'Director Review',
-    submittedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-    updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-    actions: [
-      { 
-        stage: 'Submitted', 
-        officer: user?.name || 'Staff Member', 
-        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), 
-        comment: 'Leave application submitted' 
-      }
-    ],
-    notifications: [],
-    workflow: {
-      current: 'director_review',
-      history: [
-        { 
-          stage: 'submitted', 
-          timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), 
-          officer: user?.name || 'Staff Member' 
-        }
-      ]
-    },
-    balance: leaveBalance
-  };
-
-  // Add to the beginning of the array
-  setLeaveApplications(prev => [leaveData, ...prev]);
-
-  // ============================================================
-  // 📧 OPEN EMAIL CLIENTS FOR NOTIFICATIONS
-  // ============================================================
-
-  // 1. Confirmation to applicant
-  const applicantSubject = `Leave Application ${leaveData.reference} - Submitted Successfully`;
-  const applicantBody = `
-Dear ${leaveData.applicant},
-
-Your leave application has been submitted successfully.
-
-📋 APPLICATION DETAILS:
-• Reference: ${leaveData.reference}
-• Type: ${leaveData.type}
-• Dates: ${leaveData.startDate} to ${leaveData.endDate}
-• Days: ${leaveData.days}
-• Reason: ${leaveData.reason}
-
-Status: Pending Director Review
-
-You will receive further notifications as your application progresses.
-
-Regards,
-NaCCA HRMIS System
-  `;
-
-  // 2. Notification to Director
-  const director = getDirectorForDepartment(leaveData.department);
-  const directorSubject = `Leave Application ${leaveData.reference} - Action Required (Director Review)`;
-  const directorBody = `
-Dear ${director?.name || 'Director'},
-
-A leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.
-
-📋 APPLICATION DETAILS:
-• Reference: ${leaveData.reference}
-• Type: ${leaveData.type}
-• Dates: ${leaveData.startDate} to ${leaveData.endDate}
-• Days: ${leaveData.days}
-• Reason: ${leaveData.reason}
-
-🔗 Please review and take action on this application.
-
-You can review it here: https://nacca-hrmis.vercel.app/admin/leave
-
-Regards,
-NaCCA HRMIS System
-  `;
-
-  // 3. Notification to HR (Awareness)
-  const hr = getHRDirector();
-  const hrSubject = `New Leave Application - ${leaveData.reference} (Awaiting Director Approval)`;
-  const hrBody = `
-Dear ${hr?.name || 'HR Director'},
-
-A leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.
-
-📋 APPLICATION DETAILS:
-• Reference: ${leaveData.reference}
-• Type: ${leaveData.type}
-• Dates: ${leaveData.startDate} to ${leaveData.endDate}
-• Days: ${leaveData.days}
-
-Status: Awaiting Director Review
-
-You will be notified when the Director forwards it for HR review.
-
-Regards,
-NaCCA HRMIS System
-  `;
-
-  // 4. Notification to DG (Awareness)
-  const dg = getDG();
-  const dgSubject = `New Leave Application - ${leaveData.reference} (Awaiting Director Approval)`;
-  const dgBody = `
-Dear ${dg?.name || 'Director-General'},
-
-A leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.
-
-📋 APPLICATION DETAILS:
-• Reference: ${leaveData.reference}
-• Type: ${leaveData.type}
-• Dates: ${leaveData.startDate} to ${leaveData.endDate}
-• Days: ${leaveData.days}
-
-Status: Awaiting Director Review
-
-You will be notified when the application reaches your desk.
-
-Regards,
-NaCCA HRMIS System
-  `;
-
-  // ✅ Show a prompt asking which notifications to send
-  const sendNotifications = confirm(
-    `✅ Leave application submitted!\n\n` +
-    `📧 Email notifications will be sent to:\n` +
-    `• You (Staff) - Confirmation\n` +
-    `• ${director?.name || 'Your Director'} - Action Required\n` +
-    `• ${hr?.name || 'HR Director'} - Awareness\n` +
-    `• ${dg?.name || 'Director-General'} - Awareness\n\n` +
-    `Click OK to open your email client(s) and send notifications.\n` +
-    `Click Cancel to skip emails.`
-  );
-
-  if (sendNotifications) {
-    // Open email client for each notification
-    openEmailClient(user?.email || 'staff@nacca.gov.gh', applicantSubject, applicantBody);
-    
-    if (director) {
-      setTimeout(() => {
-        openEmailClient(director.email, directorSubject, directorBody);
-      }, 500);
-    }
-    
-    if (hr) {
-      setTimeout(() => {
-        openEmailClient(hr.email, hrSubject, hrBody);
-      }, 1000);
-    }
-    
-    if (dg) {
-      setTimeout(() => {
-        openEmailClient(dg.email, dgSubject, dgBody);
-      }, 1500);
-    }
-    
-    alert('📧 Email clients opened!\n\nPlease send each email to the respective recipients.');
-  }
-
-  setShowApplyForm(false);
-  setActiveTab('director');
-};
-
   const calculateDays = (start, end) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -454,137 +223,205 @@ NaCCA HRMIS System
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   };
 
-  // Handle Workflow Actions
-const handleDirectorAction = (id, action, comment = '') => {
-  const application = leaveApplications.find(l => l.id === id);
-  if (!application) return;
-
-  if (action === 'approve') {
-    const updated = {
-      ...application,
-      status: 'hr_review',
-      currentStage: 'HR Review',
+  // ============================================================
+  // 📝 HANDLE LEAVE SUBMISSION
+  // ============================================================
+  const handleSubmitLeave = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    const leaveData = {
+      id: Date.now(),
+      reference: `NAC-LV-2026-${String(leaveApplications.length + 1).padStart(4, '0')}`,
+      applicant: user?.name || 'Staff Member',
+      applicantId: user?.staffId || 'N/A',
+      department: user?.department || 'Unknown',
+      type: formData.get('leaveType'),
+      startDate: formData.get('startDate'),
+      endDate: formData.get('endDate'),
+      days: calculateDays(formData.get('startDate'), formData.get('endDate')),
+      reason: formData.get('reason'),
+      status: 'pending_director',
+      currentStage: 'Director Review',
+      submittedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
       updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
       actions: [
-        ...application.actions,
-        { stage: 'Director Approved', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Forwarded to HR' }
+        { 
+          stage: 'Submitted', 
+          officer: user?.name || 'Staff Member', 
+          timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), 
+          comment: 'Leave application submitted' 
+        }
       ],
+      notifications: [],
       workflow: {
-        ...application.workflow,
-        current: 'hr_review',
+        current: 'director_review',
         history: [
-          ...application.workflow.history,
-          { stage: 'director_approved', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
+          { 
+            stage: 'submitted', 
+            timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), 
+            officer: user?.name || 'Staff Member' 
+          }
         ]
-      }
+      },
+      balance: leaveBalance
     };
 
-    // 📧 Send email notifications
+    setLeaveApplications(prev => [leaveData, ...prev]);
+
+    // 📧 SEND MAILTO NOTIFICATIONS
+    const director = getDirectorForDepartment(leaveData.department);
     const hr = getHRDirector();
-    if (hr) {
-      const subject = `Leave Application ${application.reference} - HR Review Required`;
-      const body = `
-Dear ${hr.name},
+    const dg = getDG();
 
-The leave application from ${application.applicant} has been forwarded for HR review.
+    const sendNotifications = confirm(
+      `✅ Leave application submitted!\n\n` +
+      `📧 Email notifications will be sent to:\n` +
+      `• You (Staff) - Confirmation\n` +
+      `• ${director?.name || 'Your Director'} - Action Required\n` +
+      `• ${hr?.name || 'HR Director'} - Awareness\n` +
+      `• ${dg?.name || 'Director-General'} - Awareness\n\n` +
+      `Click OK to open your email client(s).\n` +
+      `Click Cancel to skip emails.`
+    );
 
-📋 APPLICATION DETAILS:
-• Reference: ${application.reference}
-• Type: ${application.type}
-• Dates: ${application.startDate} to ${application.endDate}
-• Days: ${application.days}
-• Director: ${user?.name || 'Director'}
-
-🔗 Please verify leave balances and forward to DG.
-
-Regards,
-NaCCA HRMIS System
-      `;
+    if (sendNotifications) {
+      // Applicant confirmation
+      openEmailClient(
+        user?.email || 'staff@nacca.gov.gh',
+        `Leave Application ${leaveData.reference} - Submitted Successfully`,
+        `Dear ${leaveData.applicant},\n\nYour leave application has been submitted successfully.\n\n📋 APPLICATION DETAILS:\n• Reference: ${leaveData.reference}\n• Type: ${leaveData.type}\n• Dates: ${leaveData.startDate} to ${leaveData.endDate}\n• Days: ${leaveData.days}\n• Reason: ${leaveData.reason}\n\nStatus: Pending Director Review\n\nRegards,\nNaCCA HRMIS System`
+      );
       
-      if (confirm(`📧 Open email client to notify ${hr.name}?`)) {
-        openEmailClient(hr.email, subject, body);
+      if (director) {
+        setTimeout(() => {
+          openEmailClient(
+            director.email,
+            `Leave Application ${leaveData.reference} - Action Required (Director Review)`,
+            `Dear ${director.name},\n\nA leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.\n\n📋 APPLICATION DETAILS:\n• Reference: ${leaveData.reference}\n• Type: ${leaveData.type}\n• Dates: ${leaveData.startDate} to ${leaveData.endDate}\n• Days: ${leaveData.days}\n• Reason: ${leaveData.reason}\n\n🔗 Please review and take action.\n\nRegards,\nNaCCA HRMIS System`
+          );
+        }, 500);
       }
-    }
-
-    // 📧 Notify applicant
-    const applicantSubject = `Leave Application ${application.reference} - Status Update`;
-    const applicantBody = `
-Dear ${application.applicant},
-
-Your leave application has been approved by your Director.
-
-📋 APPLICATION DETAILS:
-• Reference: ${application.reference}
-• Type: ${application.type}
-• Dates: ${application.startDate} to ${application.endDate}
-
-Status: Forwarded to HR for verification.
-
-Regards,
-NaCCA HRMIS System
-    `;
-    
-    if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
-      openEmailClient(application.email || 'staff@nacca.gov.gh', applicantSubject, applicantBody);
-    }
-
-    setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
-    alert(`✅ Application ${application.reference} forwarded to HR.`);
-
-  } else if (action === 'reject') {
-    const updated = {
-      ...application,
-      status: 'rejected',
-      currentStage: 'Rejected',
-      updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      actions: [
-        ...application.actions,
-        { stage: 'Rejected', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Application rejected' }
-      ],
-      workflow: {
-        ...application.workflow,
-        current: 'completed',
-        history: [
-          ...application.workflow.history,
-          { stage: 'rejected', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
-        ]
+      
+      if (hr) {
+        setTimeout(() => {
+          openEmailClient(
+            hr.email,
+            `New Leave Application - ${leaveData.reference} (Awaiting Director Approval)`,
+            `Dear ${hr.name},\n\nA leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.\n\n📋 APPLICATION DETAILS:\n• Reference: ${leaveData.reference}\n• Type: ${leaveData.type}\n• Dates: ${leaveData.startDate} to ${leaveData.endDate}\n• Days: ${leaveData.days}\n\nStatus: Awaiting Director Review\n\nRegards,\nNaCCA HRMIS System`
+          );
+        }, 1000);
       }
-    };
-
-    // 📧 Notify applicant of rejection
-    const subject = `Leave Application ${application.reference} - Update`;
-    const body = `
-Dear ${application.applicant},
-
-Your leave application has been reviewed.
-
-📋 APPLICATION DETAILS:
-• Reference: ${application.reference}
-• Type: ${application.type}
-• Dates: ${application.startDate} to ${application.endDate}
-
-Status: ❌ Rejected
-Reason: ${comment || 'Please contact HR for more details.'}
-
-Regards,
-NaCCA HRMIS System
-    `;
-    
-    if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
-      openEmailClient(application.email || 'staff@nacca.gov.gh', subject, body);
+      
+      if (dg) {
+        setTimeout(() => {
+          openEmailClient(
+            dg.email,
+            `New Leave Application - ${leaveData.reference} (Awaiting Director Approval)`,
+            `Dear ${dg.name},\n\nA leave application has been submitted by ${leaveData.applicant} from the ${leaveData.department} department.\n\n📋 APPLICATION DETAILS:\n• Reference: ${leaveData.reference}\n• Type: ${leaveData.type}\n• Dates: ${leaveData.startDate} to ${leaveData.endDate}\n• Days: ${leaveData.days}\n\nStatus: Awaiting Director Review\n\nRegards,\nNaCCA HRMIS System`
+          );
+        }, 1500);
+      }
+      
+      alert('📧 Email clients opened!\n\nPlease send each email to the respective recipients.');
     }
 
-    setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
-    alert(`❌ Application ${application.reference} rejected.`);
-  }
-};
+    setShowApplyForm(false);
+    setActiveTab('director');
+  };
+
+  // ============================================================
+  // 🔄 WORKFLOW ACTIONS
+  // ============================================================
+  const handleDirectorAction = (id, action, comment = '') => {
+    const application = leaveApplications.find(l => l.id === id);
+    if (!application) return;
+
+    if (action === 'approve') {
+      const updated = {
+        ...application,
+        status: 'hr_review',
+        currentStage: 'HR Review',
+        updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        actions: [
+          ...application.actions,
+          { stage: 'Director Approved', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Forwarded to HR' }
+        ],
+        workflow: {
+          ...application.workflow,
+          current: 'hr_review',
+          history: [
+            ...application.workflow.history,
+            { stage: 'director_approved', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
+          ]
+        }
+      };
+
+      setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+
+      // 📧 SEND MAILTO NOTIFICATIONS
+      const hr = getHRDirector();
+      if (hr) {
+        if (confirm(`📧 Open email client to notify ${hr.name}?`)) {
+          openEmailClient(
+            hr.email,
+            `Leave Application ${application.reference} - HR Review Required`,
+            `Dear ${hr.name},\n\nThe leave application from ${application.applicant} has been forwarded for HR review.\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n• Days: ${application.days}\n• Director: ${user?.name || 'Director'}\n\n🔗 Please verify leave balances and forward to DG.\n\nRegards,\nNaCCA HRMIS System`
+          );
+        }
+      }
+
+      // Notify applicant
+      if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+        openEmailClient(
+          application.email || 'staff@nacca.gov.gh',
+          `Leave Application ${application.reference} - Status Update`,
+          `Dear ${application.applicant},\n\nYour leave application has been approved by your Director.\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n\nStatus: Forwarded to HR for verification.\n\nRegards,\nNaCCA HRMIS System`
+        );
+      }
+
+      alert(`✅ Application ${application.reference} forwarded to HR.`);
+
+    } else if (action === 'reject') {
+      const updated = {
+        ...application,
+        status: 'rejected',
+        currentStage: 'Rejected',
+        updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        actions: [
+          ...application.actions,
+          { stage: 'Rejected', officer: user?.name || 'Director', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), comment: comment || 'Application rejected' }
+        ],
+        workflow: {
+          ...application.workflow,
+          current: 'completed',
+          history: [
+            ...application.workflow.history,
+            { stage: 'rejected', timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19), officer: user?.name || 'Director' }
+          ]
+        }
+      };
+
+      setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+
+      // 📧 Send rejection notification
+      if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+        openEmailClient(
+          application.email || 'staff@nacca.gov.gh',
+          `Leave Application ${application.reference} - Update`,
+          `Dear ${application.applicant},\n\nYour leave application has been reviewed.\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n\nStatus: ❌ Rejected\nReason: ${comment || 'Please contact HR for more details.'}\n\nRegards,\nNaCCA HRMIS System`
+        );
+      }
+
+      alert(`❌ Application ${application.reference} rejected.`);
+    }
+  };
 
   const handleHRAction = (id, action, comment = '') => {
     const application = leaveApplications.find(l => l.id === id);
     if (!application) return;
 
     if (action === 'approve') {
-      // Forward to DG
       const updated = {
         ...application,
         status: 'pending_dg',
@@ -604,17 +441,29 @@ NaCCA HRMIS System
         }
       };
 
-      // Send DG notification
-      const dg = staffData.directors.find(d => d.role === 'Director-General');
+      setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+
+      // 📧 Notify DG
+      const dg = getDG();
       if (dg) {
-        sendEmailNotification(
-          dg.email,
-          `Leave Application ${application.reference} - Final Approval Required`,
-          `Dear ${dg.name},\n\nA leave application requires your final approval.\n\nEmployee: ${application.applicant}\nDepartment: ${application.department}\nType: ${application.type}\nDates: ${application.startDate} to ${application.endDate}\nLeave Balance: ${JSON.stringify(application.balance)}\n\nPlease review and approve/decline.\n\nRegards,\nNaCCA HRMIS System`
+        if (confirm(`📧 Open email client to notify ${dg.name}?`)) {
+          openEmailClient(
+            dg.email,
+            `Leave Application ${application.reference} - Final Approval Required`,
+            `Dear ${dg.name},\n\nA leave application requires your final approval.\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n• Days: ${application.days}\n• Employee: ${application.applicant}\n• Department: ${application.department}\n\n🔗 Please review and approve/decline.\n\nRegards,\nNaCCA HRMIS System`
+          );
+        }
+      }
+
+      // Notify applicant
+      if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+        openEmailClient(
+          application.email || 'staff@nacca.gov.gh',
+          `Leave Application ${application.reference} - Status Update`,
+          `Dear ${application.applicant},\n\nYour leave application has been verified by HR.\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n\nStatus: Sent to Director-General for final approval.\n\nRegards,\nNaCCA HRMIS System`
         );
       }
 
-      setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
       alert(`✅ Application ${application.reference} forwarded to Director-General.`);
 
     } else if (action === 'reject') {
@@ -637,14 +486,17 @@ NaCCA HRMIS System
         }
       };
 
-      // Send rejection notification
-      sendEmailNotification(
-        application.email || 'staff@nacca.gov.gh',
-        `Leave Application ${application.reference} - Update`,
-        `Dear ${application.applicant},\n\nYour leave application has been reviewed by HR.\n\nStatus: Rejected\nReason: ${comment || 'Please contact HR for more details.'}\n\nRegards,\nNaCCA HRMIS System`
-      );
-
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+
+      // 📧 Send rejection notification
+      if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+        openEmailClient(
+          application.email || 'staff@nacca.gov.gh',
+          `Leave Application ${application.reference} - Update`,
+          `Dear ${application.applicant},\n\nYour leave application has been reviewed by HR.\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n\nStatus: ❌ Rejected\nReason: ${comment || 'Please contact HR for more details.'}\n\nRegards,\nNaCCA HRMIS System`
+        );
+      }
+
       alert(`❌ Application ${application.reference} rejected by HR.`);
     }
   };
@@ -673,14 +525,17 @@ NaCCA HRMIS System
         }
       };
 
-      // Send final approval notification
-      sendEmailNotification(
-        application.email || 'staff@nacca.gov.gh',
-        `Leave Application ${application.reference} - Approved!`,
-        `Dear ${application.applicant},\n\nYour leave application has been APPROVED! 🎉\n\nApplication Details:\n- Reference: ${application.reference}\n- Type: ${application.type}\n- Dates: ${application.startDate} to ${application.endDate}\n- Days: ${application.days}\n\nEnjoy your leave!\n\nRegards,\nNaCCA HRMIS System`
-      );
-
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+
+      // 📧 Send approval notification to applicant
+      if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+        openEmailClient(
+          application.email || 'staff@nacca.gov.gh',
+          `Leave Application ${application.reference} - Approved! 🎉`,
+          `Dear ${application.applicant},\n\nYour leave application has been APPROVED! 🎉\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n• Days: ${application.days}\n\nEnjoy your leave!\n\nRegards,\nNaCCA HRMIS System`
+        );
+      }
+
       alert(`✅ Application ${application.reference} APPROVED!`);
 
     } else if (action === 'reject') {
@@ -703,34 +558,30 @@ NaCCA HRMIS System
         }
       };
 
-      // Send rejection notification
-      sendEmailNotification(
-        application.email || 'staff@nacca.gov.gh',
-        `Leave Application ${application.reference} - Update`,
-        `Dear ${application.applicant},\n\nYour leave application has been reviewed.\n\nStatus: Rejected by Director-General\nReason: ${comment || 'Please contact HR for more details.'}\n\nRegards,\nNaCCA HRMIS System`
-      );
-
       setLeaveApplications(leaveApplications.map(l => l.id === id ? updated : l));
+
+      // 📧 Send rejection notification
+      if (confirm(`📧 Open email client to notify ${application.applicant}?`)) {
+        openEmailClient(
+          application.email || 'staff@nacca.gov.gh',
+          `Leave Application ${application.reference} - Update`,
+          `Dear ${application.applicant},\n\nYour leave application has been reviewed.\n\n📋 APPLICATION DETAILS:\n• Reference: ${application.reference}\n• Type: ${application.type}\n• Dates: ${application.startDate} to ${application.endDate}\n\nStatus: ❌ Rejected by Director-General\nReason: ${comment || 'Please contact HR for more details.'}\n\nRegards,\nNaCCA HRMIS System`
+        );
+      }
+
       alert(`❌ Application ${application.reference} REJECTED.`);
     }
   };
 
-  // Get applications by status for tabs
-  const getApplicationsByStatus = (status) => {
-    return leaveApplications.filter(l => l.status === status);
-  };
-// Get applications by status
-const pendingDirector = leaveApplications.filter(l => l.status === 'pending_director' || l.status === 'director_review');
-const pendingHR = leaveApplications.filter(l => l.status === 'hr_review');
-const pendingDG = leaveApplications.filter(l => l.status === 'pending_dg');
-const approved = leaveApplications.filter(l => l.status === 'approved');
-const rejected = leaveApplications.filter(l => l.status === 'rejected');
+  const pendingDirector = leaveApplications.filter(l => l.status === 'pending_director' || l.status === 'director_review');
+  const pendingHR = leaveApplications.filter(l => l.status === 'hr_review');
+  const pendingDG = leaveApplications.filter(l => l.status === 'pending_dg');
+  const approved = leaveApplications.filter(l => l.status === 'approved');
+  const rejected = leaveApplications.filter(l => l.status === 'rejected');
 
-  // Check user role for workflow actions
-  const isDirector = user?.role === 'DIRECTOR' || user?.role === 'SUPER_ADMIN';
-  const isHR = user?.department === 'Human Resource' || user?.role === 'SUPER_ADMIN';
-  const isDG = user?.role === 'DIRECTOR_GENERAL' || user?.role === 'SUPER_ADMIN';
-
+  // ============================================================
+  // 🎨 RENDER
+  // ============================================================
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -828,274 +679,113 @@ const rejected = leaveApplications.filter(l => l.status === 'rejected');
         </button>
       </div>
 
-      {/* Tab Content */}
-      <div>
-        {activeTab === 'apply' && (
-          <div className="content-card">
-            <div className="px-5 py-3 border-b border-[#e2e8f0]">
-              <h5 className="font-semibold">Apply for Leave</h5>
-            </div>
-            <div className="p-5">
-              <form onSubmit={handleSubmitLeave}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-semibold text-sm">Leave Type *</label>
-                    <select name="leaveType" className="w-full p-2 border rounded-lg mt-1" required>
-                      <option value="">Select Type</option>
-                      <option>Annual Leave</option>
-                      <option>Casual Leave</option>
-                      <option>Sick Leave</option>
-                      <option>Study Leave</option>
-                      <option>Maternity Leave</option>
-                      <option>Paternity Leave</option>
-                      <option>Compassionate Leave</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold text-sm">Department</label>
-                    <input type="text" className="w-full p-2 border rounded-lg mt-1 bg-gray-50" value={user?.department || 'N/A'} readOnly />
-                  </div>
-                  <div>
-                    <label className="font-semibold text-sm">Start Date *</label>
-                    <input type="date" name="startDate" className="w-full p-2 border rounded-lg mt-1" required />
-                  </div>
-                  <div>
-                    <label className="font-semibold text-sm">End Date *</label>
-                    <input type="date" name="endDate" className="w-full p-2 border rounded-lg mt-1" required />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="font-semibold text-sm">Reason *</label>
-                    <textarea name="reason" className="w-full p-2 border rounded-lg mt-1" rows="3" required placeholder="Explain the reason for your leave request..."></textarea>
-                  </div>
-                </div>
-
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
-                  <i className="fas fa-info-circle mr-2"></i>
-                  Your application will follow this workflow:
-                  <ol className="list-decimal list-inside mt-1 text-xs text-blue-600">
-                    <li>Submitted to your Director for review</li>
-                    <li>Forwarded to Human Resources for verification</li>
-                    <li>Sent to Director-General for final approval</li>
-                    <li>You will receive email notifications at each stage</li>
-                  </ol>
-                </div>
-
-                <div className="flex gap-3 pt-4 mt-4 border-t border-[#e2e8f0]">
-                  <button type="button" onClick={() => setShowApplyForm(false)} className="btn-outline flex-1">Cancel</button>
-                  <button type="submit" className="btn-primary flex-1">
-                    <i className="fas fa-paper-plane mr-2"></i>Submit Application
-                  </button>
-                </div>
-              </form>
-            </div>
+      {/* Apply for Leave Tab */}
+      {activeTab === 'apply' && (
+        <div className="content-card">
+          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+            <h5 className="font-semibold">Apply for Leave</h5>
           </div>
-        )}
+          <div className="p-5">
+            <form onSubmit={handleSubmitLeave}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-sm">Leave Type *</label>
+                  <select name="leaveType" className="w-full p-2 border rounded-lg mt-1" required>
+                    <option value="">Select Type</option>
+                    <option>Annual Leave</option>
+                    <option>Casual Leave</option>
+                    <option>Sick Leave</option>
+                    <option>Study Leave</option>
+                    <option>Maternity Leave</option>
+                    <option>Paternity Leave</option>
+                    <option>Compassionate Leave</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">Department</label>
+                  <input type="text" className="w-full p-2 border rounded-lg mt-1 bg-gray-50" value={user?.department || 'N/A'} readOnly />
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">Start Date *</label>
+                  <input type="date" name="startDate" className="w-full p-2 border rounded-lg mt-1" required />
+                </div>
+                <div>
+                  <label className="font-semibold text-sm">End Date *</label>
+                  <input type="date" name="endDate" className="w-full p-2 border rounded-lg mt-1" required />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="font-semibold text-sm">Reason *</label>
+                  <textarea name="reason" className="w-full p-2 border rounded-lg mt-1" rows="3" required placeholder="Explain the reason for your leave request..."></textarea>
+                </div>
+              </div>
 
-        {activeTab === 'director' && (
-          <div className="content-card">
-            <div className="px-5 py-3 border-b border-[#e2e8f0]">
-              <h5 className="font-semibold flex items-center gap-2">
-                <i className="fas fa-user-check text-yellow-500"></i> Director Review ({pendingDirector.length})
-              </h5>
-            </div>
-            <div className="p-0">
-              {pendingDirector.length === 0 ? (
-                <div className="p-5 text-center text-[#6b7a8a]">
-                  <i className="fas fa-check-circle text-3xl text-green-500 mb-2 block"></i>
-                  <p>No applications pending Director review.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-[#f4f7fc]">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Reference</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Employee</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Department</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Type</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Dates</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#e2e8f0]">
-                      {pendingDirector.map((app) => (
-                        <tr key={app.id} className="hover:bg-[#f8fafc]">
-                          <td className="px-4 py-2 text-sm font-mono font-semibold">{app.reference}</td>
-                          <td className="px-4 py-2 text-sm">{app.applicant}</td>
-                          <td className="px-4 py-2 text-sm">{app.department}</td>
-                          <td className="px-4 py-2 text-sm">{app.type}</td>
-                          <td className="px-4 py-2 text-sm">{app.startDate} - {app.endDate}</td>
-                          <td className="px-4 py-2">
-                            <button onClick={() => handleDirectorAction(app.id, 'approve', 'Approved - forwarded to HR')} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm mr-1" title="Approve & Forward to HR">
-                              <i className="fas fa-check"></i>
-                            </button>
-                            <button onClick={() => {
-                              const comment = prompt('Reason for rejection:');
-                              if (comment !== null) handleDirectorAction(app.id, 'reject', comment);
-                            }} className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Reject">
-                              <i className="fas fa-times"></i>
-                            </button>
-                            <button onClick={() => setSelectedLeave(app)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View Details">
-                              <i className="fas fa-eye"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+                <i className="fas fa-info-circle mr-2"></i>
+                Your application will follow this workflow:
+                <ol className="list-decimal list-inside mt-1 text-xs text-blue-600">
+                  <li>Submitted to your Director for review</li>
+                  <li>Forwarded to Human Resources for verification</li>
+                  <li>Sent to Director-General for final approval</li>
+                  <li>You will receive email notifications at each stage</li>
+                </ol>
+              </div>
+
+              <div className="flex gap-3 pt-4 mt-4 border-t border-[#e2e8f0]">
+                <button type="button" onClick={() => setShowApplyForm(false)} className="btn-outline flex-1">Cancel</button>
+                <button type="submit" className="btn-primary flex-1">
+                  <i className="fas fa-paper-plane mr-2"></i>Submit Application
+                </button>
+              </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {activeTab === 'hr' && (
-          <div className="content-card">
-            <div className="px-5 py-3 border-b border-[#e2e8f0]">
-              <h5 className="font-semibold flex items-center gap-2">
-                <i className="fas fa-clipboard-check text-purple-500"></i> HR Review ({pendingHR.length})
-              </h5>
-            </div>
-            <div className="p-0">
-              {pendingHR.length === 0 ? (
-                <div className="p-5 text-center text-[#6b7a8a]">
-                  <i className="fas fa-check-circle text-3xl text-green-500 mb-2 block"></i>
-                  <p>No applications pending HR review.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-[#f4f7fc]">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Reference</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Employee</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Department</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Type</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Balance</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#e2e8f0]">
-                      {pendingHR.map((app) => (
-                        <tr key={app.id} className="hover:bg-[#f8fafc]">
-                          <td className="px-4 py-2 text-sm font-mono font-semibold">{app.reference}</td>
-                          <td className="px-4 py-2 text-sm">{app.applicant}</td>
-                          <td className="px-4 py-2 text-sm">{app.department}</td>
-                          <td className="px-4 py-2 text-sm">{app.type}</td>
-                          <td className="px-4 py-2 text-sm">{app.balance?.[app.type.toLowerCase().replace(' ', '')] || 'N/A'}</td>
-                          <td className="px-4 py-2">
-                            <button onClick={() => handleHRAction(app.id, 'approve', 'Leave balance verified - Forward to DG')} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm mr-1" title="Verify & Forward to DG">
-                              <i className="fas fa-check-double"></i>
-                            </button>
-                            <button onClick={() => {
-                              const comment = prompt('Reason for rejection:');
-                              if (comment !== null) handleHRAction(app.id, 'reject', comment);
-                            }} className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Reject">
-                              <i className="fas fa-times"></i>
-                            </button>
-                            <button onClick={() => setSelectedLeave(app)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View Details">
-                              <i className="fas fa-eye"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+      {/* Director Review Tab */}
+      {activeTab === 'director' && (
+        <div className="content-card">
+          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+            <h5 className="font-semibold flex items-center gap-2">
+              <i className="fas fa-user-check text-yellow-500"></i> Director Review ({pendingDirector.length})
+            </h5>
           </div>
-        )}
-
-        {activeTab === 'dg' && (
-          <div className="content-card">
-            <div className="px-5 py-3 border-b border-[#e2e8f0]">
-              <h5 className="font-semibold flex items-center gap-2">
-                <i className="fas fa-crown text-red-500"></i> DG Review ({pendingDG.length})
-              </h5>
-            </div>
-            <div className="p-0">
-              {pendingDG.length === 0 ? (
-                <div className="p-5 text-center text-[#6b7a8a]">
-                  <i className="fas fa-check-circle text-3xl text-green-500 mb-2 block"></i>
-                  <p>No applications pending Director-General review.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-[#f4f7fc]">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Reference</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Employee</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Department</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Type</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">HR Verified</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#e2e8f0]">
-                      {pendingDG.map((app) => (
-                        <tr key={app.id} className="hover:bg-[#f8fafc]">
-                          <td className="px-4 py-2 text-sm font-mono font-semibold">{app.reference}</td>
-                          <td className="px-4 py-2 text-sm">{app.applicant}</td>
-                          <td className="px-4 py-2 text-sm">{app.department}</td>
-                          <td className="px-4 py-2 text-sm">{app.type}</td>
-                          <td className="px-4 py-2 text-sm">
-                            <span className="text-green-600"><i className="fas fa-check-circle mr-1"></i>Verified</span>
-                          </td>
-                          <td className="px-4 py-2">
-                            <button onClick={() => handleDGApproval(app.id, 'approve', 'Approved')} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm mr-1" title="Approve">
-                              <i className="fas fa-check-double"></i>
-                            </button>
-                            <button onClick={() => {
-                              const comment = prompt('Reason for rejection:');
-                              if (comment !== null) handleDGApproval(app.id, 'reject', comment);
-                            }} className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Reject">
-                              <i className="fas fa-times"></i>
-                            </button>
-                            <button onClick={() => setSelectedLeave(app)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View Details">
-                              <i className="fas fa-eye"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'history' && (
-          <div className="content-card">
-            <div className="px-5 py-3 border-b border-[#e2e8f0]">
-              <h5 className="font-semibold flex items-center gap-2">
-                <i className="fas fa-history text-[#0056A3]"></i> Leave History & Audit Trail
-              </h5>
-            </div>
-            <div className="p-0">
+          <div className="p-0">
+            {pendingDirector.length === 0 ? (
+              <div className="p-5 text-center text-[#6b7a8a]">
+                <i className="fas fa-check-circle text-3xl text-green-500 mb-2 block"></i>
+                <p>No applications pending Director review.</p>
+              </div>
+            ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-[#f4f7fc]">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Reference</th>
                       <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Employee</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Department</th>
                       <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Type</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Status</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Current Stage</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Dates</th>
                       <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e2e8f0]">
-                    {[...approved, ...rejected].map((app) => (
+                    {pendingDirector.map((app) => (
                       <tr key={app.id} className="hover:bg-[#f8fafc]">
                         <td className="px-4 py-2 text-sm font-mono font-semibold">{app.reference}</td>
                         <td className="px-4 py-2 text-sm">{app.applicant}</td>
+                        <td className="px-4 py-2 text-sm">{app.department}</td>
                         <td className="px-4 py-2 text-sm">{app.type}</td>
-                        <td className="px-4 py-2" dangerouslySetInnerHTML={{ __html: getStatusBadge(app.status) }} />
-                        <td className="px-4 py-2 text-sm">{app.currentStage}</td>
+                        <td className="px-4 py-2 text-sm">{app.startDate} - {app.endDate}</td>
                         <td className="px-4 py-2">
+                          <button onClick={() => handleDirectorAction(app.id, 'approve', 'Approved - forwarded to HR')} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm mr-1" title="Approve & Forward to HR">
+                            <i className="fas fa-check"></i>
+                          </button>
+                          <button onClick={() => {
+                            const comment = prompt('Reason for rejection:');
+                            if (comment !== null) handleDirectorAction(app.id, 'reject', comment);
+                          }} className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Reject">
+                            <i className="fas fa-times"></i>
+                          </button>
                           <button onClick={() => setSelectedLeave(app)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View Details">
                             <i className="fas fa-eye"></i>
                           </button>
@@ -1105,10 +795,173 @@ const rejected = leaveApplications.filter(l => l.status === 'rejected');
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* HR Review Tab */}
+      {activeTab === 'hr' && (
+        <div className="content-card">
+          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+            <h5 className="font-semibold flex items-center gap-2">
+              <i className="fas fa-clipboard-check text-purple-500"></i> HR Review ({pendingHR.length})
+            </h5>
+          </div>
+          <div className="p-0">
+            {pendingHR.length === 0 ? (
+              <div className="p-5 text-center text-[#6b7a8a]">
+                <i className="fas fa-check-circle text-3xl text-green-500 mb-2 block"></i>
+                <p>No applications pending HR review.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#f4f7fc]">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Reference</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Employee</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Department</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Type</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Balance</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e2e8f0]">
+                    {pendingHR.map((app) => (
+                      <tr key={app.id} className="hover:bg-[#f8fafc]">
+                        <td className="px-4 py-2 text-sm font-mono font-semibold">{app.reference}</td>
+                        <td className="px-4 py-2 text-sm">{app.applicant}</td>
+                        <td className="px-4 py-2 text-sm">{app.department}</td>
+                        <td className="px-4 py-2 text-sm">{app.type}</td>
+                        <td className="px-4 py-2 text-sm">{app.balance?.[app.type.toLowerCase().replace(' ', '')] || 'N/A'}</td>
+                        <td className="px-4 py-2">
+                          <button onClick={() => handleHRAction(app.id, 'approve', 'Leave balance verified - Forward to DG')} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm mr-1" title="Verify & Forward to DG">
+                            <i className="fas fa-check-double"></i>
+                          </button>
+                          <button onClick={() => {
+                            const comment = prompt('Reason for rejection:');
+                            if (comment !== null) handleHRAction(app.id, 'reject', comment);
+                          }} className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Reject">
+                            <i className="fas fa-times"></i>
+                          </button>
+                          <button onClick={() => setSelectedLeave(app)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View Details">
+                            <i className="fas fa-eye"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DG Review Tab */}
+      {activeTab === 'dg' && (
+        <div className="content-card">
+          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+            <h5 className="font-semibold flex items-center gap-2">
+              <i className="fas fa-crown text-red-500"></i> DG Review ({pendingDG.length})
+            </h5>
+          </div>
+          <div className="p-0">
+            {pendingDG.length === 0 ? (
+              <div className="p-5 text-center text-[#6b7a8a]">
+                <i className="fas fa-check-circle text-3xl text-green-500 mb-2 block"></i>
+                <p>No applications pending Director-General review.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#f4f7fc]">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Reference</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Employee</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Department</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Type</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">HR Verified</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e2e8f0]">
+                    {pendingDG.map((app) => (
+                      <tr key={app.id} className="hover:bg-[#f8fafc]">
+                        <td className="px-4 py-2 text-sm font-mono font-semibold">{app.reference}</td>
+                        <td className="px-4 py-2 text-sm">{app.applicant}</td>
+                        <td className="px-4 py-2 text-sm">{app.department}</td>
+                        <td className="px-4 py-2 text-sm">{app.type}</td>
+                        <td className="px-4 py-2 text-sm">
+                          <span className="text-green-600"><i className="fas fa-check-circle mr-1"></i>Verified</span>
+                        </td>
+                        <td className="px-4 py-2">
+                          <button onClick={() => handleDGApproval(app.id, 'approve', 'Approved')} className="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition text-sm mr-1" title="Approve">
+                            <i className="fas fa-check-double"></i>
+                          </button>
+                          <button onClick={() => {
+                            const comment = prompt('Reason for rejection:');
+                            if (comment !== null) handleDGApproval(app.id, 'reject', comment);
+                          }} className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition text-sm" title="Reject">
+                            <i className="fas fa-times"></i>
+                          </button>
+                          <button onClick={() => setSelectedLeave(app)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View Details">
+                            <i className="fas fa-eye"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* History Tab */}
+      {activeTab === 'history' && (
+        <div className="content-card">
+          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+            <h5 className="font-semibold flex items-center gap-2">
+              <i className="fas fa-history text-[#0056A3]"></i> Leave History & Audit Trail
+            </h5>
+          </div>
+          <div className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-[#f4f7fc]">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Reference</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Employee</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Type</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Current Stage</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-[#6b7a8a]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e2e8f0]">
+                  {[...approved, ...rejected].map((app) => (
+                    <tr key={app.id} className="hover:bg-[#f8fafc]">
+                      <td className="px-4 py-2 text-sm font-mono font-semibold">{app.reference}</td>
+                      <td className="px-4 py-2 text-sm">{app.applicant}</td>
+                      <td className="px-4 py-2 text-sm">{app.type}</td>
+                      <td className="px-4 py-2" dangerouslySetInnerHTML={{ __html: getStatusBadge(app.status) }} />
+                      <td className="px-4 py-2 text-sm">{app.currentStage}</td>
+                      <td className="px-4 py-2">
+                        <button onClick={() => setSelectedLeave(app)} className="text-[#0056A3] hover:bg-[#0056A3]/10 p-1.5 rounded-lg transition text-sm" title="View Details">
+                          <i className="fas fa-eye"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Leave Details Modal */}
       {selectedLeave && (

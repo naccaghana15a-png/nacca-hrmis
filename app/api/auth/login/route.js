@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '../../../lib/supabase';
-import { users, tempPasswords, initDemoUsers } from '../../../lib/users';
+import { supabase } from '../../../../lib/supabase';
+import { users, tempPasswords, initDemoUsers } from '../../../../lib/users';
 
 // Initialize demo users (for fallback)
 initDemoUsers();

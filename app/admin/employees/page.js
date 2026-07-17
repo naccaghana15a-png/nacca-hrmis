@@ -227,7 +227,7 @@ const getStatusBadge = (status) => {
   // ============================================================
   // 🔐 CREATE ACCOUNT
   // ============================================================
- const handleCreateAccount = async (employee) => {
+const handleCreateAccount = async (employee) => {
   if (!confirm(`Create account for ${employee.name}?\n\nEmail: ${employee.email}\nStaff ID: ${employee.staffId}`)) return;
   
   setLoading(true);
@@ -251,25 +251,72 @@ const getStatusBadge = (status) => {
     if (data.success) {
       const password = data.tempPassword || 'No password returned';
       
-      // ✅ Use prompt instead of alert - allows copying!
-      const message = 
-        '✅ ACCOUNT CREATED!\n\n' +
-        'Employee: ' + employee.name + '\n' +
-        'Email: ' + employee.email + '\n' +
-        'Staff ID: ' + employee.staffId + '\n' +
-        'Department: ' + employee.department + '\n\n' +
-        '🔑 TEMPORARY PASSWORD:\n' +
-        password + '\n\n' +
-        '📋 Select and copy the password above.\n' +
-        'Share it with the staff member.\n\n' +
-        '⚠️ They must change it on first login.';
-      
-      // Show in prompt with password pre-filled in the input field
-      const userInput = prompt(message, password);
-      
-      // If user clicked OK, confirm
-      if (userInput !== null) {
-        alert('✅ Password copied/shared!\n\nPassword: ' + password);
+      // ✅ Build the email content
+      const subject = encodeURIComponent('Welcome to NaCCA HRMIS - Your Account Credentials');
+      const body = encodeURIComponent(`
+Dear ${employee.name},
+
+Welcome to NaCCA HRMIS!
+
+Your account has been created successfully.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔑 TEMPORARY PASSWORD: ${password}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 ACCOUNT DETAILS:
+• Staff ID: ${employee.staffId}
+• Department: ${employee.department}
+• Email: ${employee.email}
+
+⚠️ IMPORTANT:
+• This is a TEMPORARY password
+• You MUST change it on first login
+• Do not share this password with anyone
+
+🔐 LOGIN URL:
+https://nacca-hrmis.vercel.app
+
+📋 PASSWORD REQUIREMENTS:
+• Minimum 8 characters
+• At least one uppercase letter
+• At least one lowercase letter
+• At least one number
+• At least one special character (!@#$%^&*)
+
+If you have any issues, please contact the HR Department.
+
+Regards,
+NaCCA HRMIS Team
+      `);
+
+      // ✅ Create mailto link
+      const mailtoLink = `mailto:${employee.email}?subject=${subject}&body=${body}`;
+
+      // ✅ Show the password in prompt and offer to send email
+      const userChoice = confirm(
+        `✅ ACCOUNT CREATED!\n\n` +
+        `Employee: ${employee.name}\n` +
+        `Email: ${employee.email}\n` +
+        `Staff ID: ${employee.staffId}\n` +
+        `Department: ${employee.department}\n\n` +
+        `🔑 TEMPORARY PASSWORD: ${password}\n\n` +
+        `Click OK to open your email client and send the password to the employee.\n` +
+        `Click Cancel to copy the password manually.`
+      );
+
+      if (userChoice) {
+        // ✅ Open mailto link in a new window/tab
+        window.open(mailtoLink, '_blank');
+        alert('✅ Email client opened!\n\nPlease click Send to send the password to the employee.');
+      } else {
+        // ✅ Copy password to clipboard
+        try {
+          await navigator.clipboard.writeText(password);
+          alert(`✅ Password copied to clipboard!\n\nPassword: ${password}\n\nPlease share it with the employee.`);
+        } catch (err) {
+          alert(`📋 Please copy the password manually:\n\n${password}`);
+        }
       }
       
       await fetchEmployees();

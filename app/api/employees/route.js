@@ -30,36 +30,39 @@ function generateTempPassword() {
 // ============================================================
 export async function GET() {
   try {
-    // ✅ Get from database first, fallback to users object
     let employees = [];
     
     try {
-      const dbEmployees = db.prepare('SELECT * FROM employees').all();
+      // Try to get from database
+      const stmt = db.prepare('SELECT * FROM employees');
+      const dbEmployees = stmt.all();
+      
       if (dbEmployees && dbEmployees.length > 0) {
         employees = dbEmployees.map(emp => ({
           id: emp.id,
-          staffId: emp.staffId,
-          name: emp.name,
+          staffId: emp.staffId || `NAC-${String(emp.id).padStart(4, '0')}`,
+          name: emp.name || 'Unknown',
           position: emp.role || 'Staff',
           department: emp.department || 'N/A',
           email: emp.email,
           status: emp.isFirstLogin ? 'Pending' : 'Active',
           joinDate: emp.passwordChangedAt || new Date().toISOString().split('T')[0]
         }));
+        console.log('📊 Employees from database:', employees.length);
       } else {
-        // Fallback to users object if database is empty
+        // Fallback to users object
         employees = getAllEmployees();
+        console.log('📊 Employees from memory:', employees.length);
       }
     } catch (dbError) {
-      console.log('Database not ready, using in-memory data:', dbError.message);
+      console.log('Database error, using memory:', dbError.message);
       employees = getAllEmployees();
     }
 
-    console.log('📊 Employees fetched:', employees.length);
     return NextResponse.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);
-    // Fallback to in-memory data
+    // Ultimate fallback
     try {
       const employees = getAllEmployees();
       return NextResponse.json(employees);
@@ -135,7 +138,7 @@ export async function POST(request) {
 
     tempPasswords[email] = tempPassword;
 
-    // ✅ Save to database
+    // ✅ Save to database (with error handling)
     try {
       const stmt = db.prepare(`
         INSERT OR REPLACE INTO employees (
@@ -151,18 +154,19 @@ export async function POST(request) {
         position || 'STAFF',
         newStaffId,
         department || 'N/A',
-        1, // isFirstLogin
+        1,
         status || 'Active',
-        null, // password
-        null, // passwordChangedAt
-        0, // accountLocked
-        0, // failedAttempts
-        null, // lockTime
-        null // lastLogin
+        null,
+        null,
+        0,
+        0,
+        null,
+        null
       );
       console.log('✅ Employee saved to database:', email);
     } catch (dbError) {
       console.log('⚠️ Could not save to database:', dbError.message);
+      // Continue anyway - user is in memory
     }
 
     console.log('✅ Employee added:', { email, name, newStaffId });
@@ -236,14 +240,13 @@ export async function PUT(request) {
         params.push(position);
       }
       
-      // Remove trailing comma and space
       updateQuery = updateQuery.slice(0, -2);
       updateQuery += ' WHERE email = ?';
       params.push(email);
       
       const stmt = db.prepare(updateQuery);
-      stmt.run(...params);
-      console.log('✅ Employee updated in database:', email);
+      const result = stmt.run(...params);
+      console.log('✅ Employee updated in database:', email, 'Changes:', result.changes);
     } catch (dbError) {
       console.log('⚠️ Could not update database:', dbError.message);
     }
@@ -257,7 +260,7 @@ export async function PUT(request) {
   } catch (error) {
     console.error('Error updating employee:', error);
     return NextResponse.json(
-      { error: 'Failed to update employee' },
+      { error: 'Failed to update employee: ' + error.message },
       { status: 500 }
     );
   }
@@ -292,8 +295,8 @@ export async function DELETE(request) {
     // ✅ Delete from database
     try {
       const stmt = db.prepare('DELETE FROM employees WHERE email = ?');
-      stmt.run(email);
-      console.log('✅ Employee deleted from database:', email);
+      const result = stmt.run(email);
+      console.log('✅ Employee deleted from database:', email, 'Rows affected:', result.changes);
     } catch (dbError) {
       console.log('⚠️ Could not delete from database:', dbError.message);
     }
@@ -306,7 +309,7 @@ export async function DELETE(request) {
   } catch (error) {
     console.error('Error deleting employee:', error);
     return NextResponse.json(
-      { error: 'Failed to delete employee' },
+      { error: 'Failed to delete employee: ' + error.message },
       { status: 500 }
     );
   }

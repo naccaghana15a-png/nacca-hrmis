@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { users, tempPasswords, getAllEmployees } from '../../../lib/users';
+import db from '../../../lib/db';
 
 // ============================================================
 // 🔑 GENERATE TEMPORARY PASSWORD
@@ -25,20 +26,49 @@ function generateTempPassword() {
 }
 
 // ============================================================
-// 📊 GET - Fetch all employees (using getAllEmployees from lib)
+// 📊 GET - Fetch all employees
 // ============================================================
 export async function GET() {
   try {
-    // ✅ USE THE getAllEmployees FUNCTION FROM lib/users.js
-    const employees = getAllEmployees();
+    // ✅ Get from database first, fallback to users object
+    let employees = [];
+    
+    try {
+      const dbEmployees = db.prepare('SELECT * FROM employees').all();
+      if (dbEmployees && dbEmployees.length > 0) {
+        employees = dbEmployees.map(emp => ({
+          id: emp.id,
+          staffId: emp.staffId,
+          name: emp.name,
+          position: emp.role || 'Staff',
+          department: emp.department || 'N/A',
+          email: emp.email,
+          status: emp.isFirstLogin ? 'Pending' : 'Active',
+          joinDate: emp.passwordChangedAt || new Date().toISOString().split('T')[0]
+        }));
+      } else {
+        // Fallback to users object if database is empty
+        employees = getAllEmployees();
+      }
+    } catch (dbError) {
+      console.log('Database not ready, using in-memory data:', dbError.message);
+      employees = getAllEmployees();
+    }
+
     console.log('📊 Employees fetched:', employees.length);
     return NextResponse.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch employees' },
-      { status: 500 }
-    );
+    // Fallback to in-memory data
+    try {
+      const employees = getAllEmployees();
+      return NextResponse.json(employees);
+    } catch (fallbackError) {
+      return NextResponse.json(
+        { error: 'Failed to fetch employees' },
+        { status: 500 }
+      );
+    }
   }
 }
 
@@ -86,7 +116,7 @@ export async function POST(request) {
     const newStaffId = `NAC-${String(Object.keys(users).length + 1).padStart(4, '0')}`;
     const tempPassword = generateTempPassword();
 
-    // Create user
+    // Create user in memory
     users[email] = {
       password: null,
       name: name,
@@ -104,6 +134,36 @@ export async function POST(request) {
     };
 
     tempPasswords[email] = tempPassword;
+
+    // ✅ Save to database
+    try {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO employees (
+          email, name, role, staffId, department, isFirstLogin,
+          employmentStatus, password, passwordChangedAt, accountLocked,
+          failedAttempts, lockTime, lastLogin
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      stmt.run(
+        email,
+        name,
+        position || 'STAFF',
+        newStaffId,
+        department || 'N/A',
+        1, // isFirstLogin
+        status || 'Active',
+        null, // password
+        null, // passwordChangedAt
+        0, // accountLocked
+        0, // failedAttempts
+        null, // lockTime
+        null // lastLogin
+      );
+      console.log('✅ Employee saved to database:', email);
+    } catch (dbError) {
+      console.log('⚠️ Could not save to database:', dbError.message);
+    }
 
     console.log('✅ Employee added:', { email, name, newStaffId });
 
@@ -153,10 +213,40 @@ export async function PUT(request) {
       );
     }
 
-    // Update user data
+    // Update in-memory
     if (name) users[email].name = name;
     if (department) users[email].department = department;
     if (position) users[email].role = position;
+
+    // ✅ Update in database
+    try {
+      let updateQuery = 'UPDATE employees SET ';
+      const params = [];
+      
+      if (name) {
+        updateQuery += 'name = ?, ';
+        params.push(name);
+      }
+      if (department) {
+        updateQuery += 'department = ?, ';
+        params.push(department);
+      }
+      if (position) {
+        updateQuery += 'role = ?, ';
+        params.push(position);
+      }
+      
+      // Remove trailing comma and space
+      updateQuery = updateQuery.slice(0, -2);
+      updateQuery += ' WHERE email = ?';
+      params.push(email);
+      
+      const stmt = db.prepare(updateQuery);
+      stmt.run(...params);
+      console.log('✅ Employee updated in database:', email);
+    } catch (dbError) {
+      console.log('⚠️ Could not update database:', dbError.message);
+    }
 
     return NextResponse.json({
       success: true,
@@ -195,8 +285,18 @@ export async function DELETE(request) {
       );
     }
 
+    // Delete from memory
     delete users[email];
     delete tempPasswords[email];
+
+    // ✅ Delete from database
+    try {
+      const stmt = db.prepare('DELETE FROM employees WHERE email = ?');
+      stmt.run(email);
+      console.log('✅ Employee deleted from database:', email);
+    } catch (dbError) {
+      console.log('⚠️ Could not delete from database:', dbError.message);
+    }
 
     return NextResponse.json({
       success: true,

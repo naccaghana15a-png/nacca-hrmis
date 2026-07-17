@@ -7,6 +7,8 @@ export default function LeavePage() {
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [activeTab, setActiveTab] = useState('apply');
+  const [leaveApplications, setLeaveApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // ============================================================
   // 📊 FETCH LOGGED-IN USER
@@ -17,10 +19,161 @@ export default function LeavePage() {
       .then(data => {
         if (data.authenticated) {
           setUser(data.user);
+          loadLeaveApplications(data.user);
         }
       })
-      .catch(() => {});
+      .catch(() => setLoading(false));
   }, []);
+
+  // ============================================================
+  // 📋 LOAD LEAVE APPLICATIONS (FILTERED BY USER)
+  // ============================================================
+  const loadLeaveApplications = (currentUser) => {
+    // All applications data
+    const allApplications = [
+      {
+        id: 1,
+        reference: 'NAC-LV-2026-0001',
+        applicant: 'Joachim Kwame Seyram Honu',
+        applicantId: 'S001',
+        email: 'joachim.honu@nacca.gov.gh',
+        department: 'Assessment',
+        type: 'Annual Leave',
+        startDate: '2026-07-15',
+        endDate: '2026-07-19',
+        days: 5,
+        reason: 'Family vacation',
+        status: 'pending_director',
+        currentStage: 'Director Review',
+        submittedAt: '2026-07-10 09:30:00',
+        updatedAt: '2026-07-10 09:30:00',
+        actions: [
+          { stage: 'Submitted', officer: 'Joachim Honu', timestamp: '2026-07-10 09:30:00', comment: 'Leave application submitted' },
+        ],
+        notifications: [],
+        workflow: {
+          current: 'director_review',
+          history: [
+            { stage: 'submitted', timestamp: '2026-07-10 09:30:00', officer: 'Joachim Honu' }
+          ]
+        },
+        balance: { annual: 12, casual: 5, sick: 9 }
+      },
+      {
+        id: 2,
+        reference: 'NAC-LV-2026-0002',
+        applicant: 'Richard Teye',
+        applicantId: 'S002',
+        email: 'richard.teye@nacca.gov.gh',
+        department: 'Assessment',
+        type: 'Sick Leave',
+        startDate: '2026-07-12',
+        endDate: '2026-07-13',
+        days: 2,
+        reason: 'Medical appointment',
+        status: 'hr_review',
+        currentStage: 'HR Review',
+        submittedAt: '2026-07-09 14:15:00',
+        updatedAt: '2026-07-10 08:45:00',
+        actions: [
+          { stage: 'Submitted', officer: 'Richard Teye', timestamp: '2026-07-09 14:15:00', comment: 'Leave application submitted' },
+          { stage: 'Director Approved', officer: 'Anita Collison', timestamp: '2026-07-10 08:30:00', comment: 'Approved - valid medical reason' },
+          { stage: 'Forwarded to HR', officer: 'Anita Collison', timestamp: '2026-07-10 08:35:00', comment: 'Forwarded for HR review' },
+        ],
+        notifications: [],
+        workflow: {
+          current: 'hr_review',
+          history: [
+            { stage: 'submitted', timestamp: '2026-07-09 14:15:00', officer: 'Richard Teye' },
+            { stage: 'director_approved', timestamp: '2026-07-10 08:30:00', officer: 'Anita Collison' },
+            { stage: 'hr_review', timestamp: '2026-07-10 08:45:00', officer: 'Elijah Intsiful' }
+          ]
+        },
+        balance: { annual: 14, casual: 5, sick: 7 }
+      },
+      {
+        id: 3,
+        reference: 'NAC-LV-2026-0003',
+        applicant: 'Genevieve Mensah',
+        applicantId: 'S003',
+        email: 'genevieve.mensah@nacca.gov.gh',
+        department: 'Curriculum',
+        type: 'Annual Leave',
+        startDate: '2026-07-20',
+        endDate: '2026-07-24',
+        days: 5,
+        reason: 'Personal vacation',
+        status: 'approved',
+        currentStage: 'Final Approved',
+        submittedAt: '2026-07-05 10:00:00',
+        updatedAt: '2026-07-08 16:20:00',
+        actions: [
+          { stage: 'Submitted', officer: 'Genevieve Mensah', timestamp: '2026-07-05 10:00:00', comment: 'Leave application submitted' },
+          { stage: 'Director Approved', officer: 'Reginald Quartey', timestamp: '2026-07-06 09:15:00', comment: 'Approved - work schedule clear' },
+          { stage: 'HR Verified', officer: 'Elijah Intsiful', timestamp: '2026-07-07 11:30:00', comment: 'Leave balance sufficient - approved' },
+          { stage: 'DG Approved', officer: 'Prof. Samuel Ofori Bekoe', timestamp: '2026-07-08 16:20:00', comment: 'Approved' },
+        ],
+        notifications: [],
+        workflow: {
+          current: 'completed',
+          history: [
+            { stage: 'submitted', timestamp: '2026-07-05 10:00:00', officer: 'Genevieve Mensah' },
+            { stage: 'director_approved', timestamp: '2026-07-06 09:15:00', officer: 'Reginald Quartey' },
+            { stage: 'hr_verified', timestamp: '2026-07-07 11:30:00', officer: 'Elijah Intsiful' },
+            { stage: 'dg_approved', timestamp: '2026-07-08 16:20:00', officer: 'Prof. Samuel Ofori Bekoe' }
+          ]
+        },
+        balance: { annual: 9, casual: 5, sick: 9 }
+      },
+      {
+        id: 4,
+        reference: 'NAC-LV-2026-0004',
+        applicant: 'SETH NII NARTEY',
+        applicantId: 'S007',
+        email: 'seth.nartey@nacca.gov.gh',
+        department: 'Corporate Affairs',
+        type: 'Study Leave',
+        startDate: '2026-07-01',
+        endDate: '2026-09-17',
+        days: 79,
+        reason: 'Professional development course',
+        status: 'pending_director',
+        currentStage: 'Director Review',
+        submittedAt: '2026-07-01 10:00:00',
+        updatedAt: '2026-07-01 10:00:00',
+        actions: [
+          { stage: 'Submitted', officer: 'SETH NII NARTEY', timestamp: '2026-07-01 10:00:00', comment: 'Leave application submitted' },
+        ],
+        notifications: [],
+        workflow: {
+          current: 'director_review',
+          history: [
+            { stage: 'submitted', timestamp: '2026-07-01 10:00:00', officer: 'SETH NII NARTEY' }
+          ]
+        },
+        balance: { annual: 14, casual: 5, sick: 9 }
+      }
+    ];
+
+    // ✅ FILTER: Show only user's own applications (unless admin)
+    const isAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'DIRECTOR';
+    
+    let filteredApplications;
+    if (isAdmin) {
+      // Admin sees all applications (for management)
+      filteredApplications = allApplications;
+    } else {
+      // Staff only sees their own applications
+      filteredApplications = allApplications.filter(app => 
+        app.email === currentUser?.email || 
+        app.applicantId === currentUser?.staffId ||
+        app.applicant === currentUser?.name
+      );
+    }
+
+    setLeaveApplications(filteredApplications);
+    setLoading(false);
+  };
 
   // Real NaCCA Staff Data
   const staffData = {
